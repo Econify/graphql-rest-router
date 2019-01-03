@@ -35,6 +35,7 @@ export interface IOperationVariable {
   name: string;
   required: boolean;
   type: string;
+  array: boolean;
   defaultValue?: string | boolean | number;
 }
 
@@ -51,21 +52,20 @@ enum EHTTPMethod {
 }
 */
 
-function translateVariableType(node: any): any {
+function isVariableArray(node: any): boolean {
   if (node.type.kind === 'NonNullType') {
+    return isVariableArray(node.type);
+  }
+
+  return node.type.kind === 'ListType';
+}
+
+function translateVariableType(node: any): string {
+  if (node.type.kind === 'NonNullType' || node.type.kind === 'ListType') {
     return translateVariableType(node.type);
   }
 
-  switch (node.type.name.value) {
-    case 'Int':
-      return 'number';
-    case 'Boolean':
-      return 'boolean';
-    case 'String':
-    default:
-      return 'string';
-
-  }
+  return node.type.name.value;
 }
 
 function cleanPath(path: string): string {
@@ -80,6 +80,9 @@ export default class Route implements IMountableItem {
   public path!: string;
   public httpMethod: string = 'get';
 
+  public passThroughHeaders: string[] = [];
+  public operationVariables!: IOperationVariable[];
+
   // TODO:
   // The route should be frozen on any type of export
   // (such as asExpressRoute) to ensure that users understand
@@ -92,12 +95,9 @@ export default class Route implements IMountableItem {
   private schema!: DocumentNode;
 
   private operationName!: string;
-  private operationVariables!: IOperationVariable[];
 
   private transformRequestFn: AxiosTransformer[] = [];
   private transformResponseFn: AxiosTransformer[] = [];
-
-  private passThroughHeaders: string[] = [];
 
   private staticVariables: {} = {};
   private defaultVariables: {} = {};
@@ -175,6 +175,7 @@ export default class Route implements IMountableItem {
         name: node.variable.name.value,
         required: node.type.kind === 'NonNullType',
         type: translateVariableType(node),
+        array: isVariableArray(node), 
         defaultValue: node.defaultValue,
       })
     );
@@ -362,7 +363,7 @@ export default class Route implements IMountableItem {
       );
   }
 
-private async makeRequest(variables: {}, headers: {} = {}): Promise<IResponse> {
+  private async makeRequest(variables: {}, headers: {} = {}): Promise<IResponse> {
     const { axios, schema, operationName } = this;
 
     const config: AxiosRequestConfig = {

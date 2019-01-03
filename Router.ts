@@ -35,9 +35,9 @@ export default class Router {
 
   public routes: Route[] = [];
   public modules: IMountableItem[] = [];
+  public axios: AxiosInstance;
 
   private passThroughHeaders: string[] = [];
-  private axios: AxiosInstance;
 
   constructor(public endpoint: string, schema: string, assignedConfiguration?: IGlobalConfiguration) {
     const {

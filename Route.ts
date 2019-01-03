@@ -1,4 +1,5 @@
 import IMountableItem from './IMountableItem';
+import { IncomingHttpHeaders } from 'http';
 import Router from './Router';
 import { DocumentNode, parse, print, getOperationAST } from 'graphql';
 import { AxiosTransformer, AxiosInstance, AxiosRequestConfig } from 'axios';
@@ -14,6 +15,8 @@ export interface IConstructorRouteOptions {
   cacheTimeInMs?: number;
   method?: string;
 
+  passThroughHeaders?: string[];
+
   staticVariables?: {};
   defaultVariables?: {};
 }
@@ -22,6 +25,7 @@ export interface IRouteOptions {
   path?: string;
   cacheTimeInMs?: number;
   method?: string;
+  passThroughHeaders?: string[];
 
   staticVariables?: {};
   defaultVariables?: {};
@@ -90,8 +94,10 @@ export default class Route implements IMountableItem {
   private operationName!: string;
   private operationVariables!: IOperationVariable[];
 
-  private transformRequestFn?: AxiosTransformer;
-  private transformResponseFn?: AxiosTransformer;
+  private transformRequestFn: AxiosTransformer[] = [];
+  private transformResponseFn: AxiosTransformer[] = [];
+
+  private passThroughHeaders: string[] = [];
 
   private staticVariables: {} = {};
   private defaultVariables: {} = {};
@@ -124,10 +130,30 @@ export default class Route implements IMountableItem {
     this.withOptions(options);
   }
 
+  private filterHeadersForPassThrough(headers: IncomingHttpHeaders): IncomingHttpHeaders {
+    const passThroughHeaders: IncomingHttpHeaders = {};
+
+    this.passThroughHeaders.forEach(
+      (header: string) => {
+        if (headers.hasOwnProperty(header)) {
+          passThroughHeaders[header] = headers[header];
+        }
+      }
+    );
+
+    return passThroughHeaders;
+  }
+
   setRouter(router: Router): this {
     this.router = router;
 
     return this;
+  }
+
+  whitelistHeaderForPassThrough(header: string): this {
+    this.passThroughHeaders.push(header);
+
+    return this
   }
 
   at(path: string): this {
@@ -172,6 +198,7 @@ export default class Route implements IMountableItem {
       defaultVariables,
       staticVariables,
       cacheTimeInMs,
+      passThroughHeaders,
     } = options;
 
     if (path) {
@@ -180,6 +207,10 @@ export default class Route implements IMountableItem {
 
     if (httpMethod) {
       this.as(httpMethod);
+    }
+
+    if (passThroughHeaders) {
+      passThroughHeaders.forEach(this.whitelistHeaderForPassThrough.bind(this));
     }
 
     if (defaultVariables) {
@@ -246,6 +277,8 @@ export default class Route implements IMountableItem {
       const assembledVariables = this.assembleVariables(providedVariables);
       const missingVariables = this.missingVariables(assembledVariables);
 
+      const headers = this.filterHeadersForPassThrough(req.headers);
+
       if (missingVariables.length) {
         res.json({
           error: 'Missing Variables',
@@ -254,7 +287,7 @@ export default class Route implements IMountableItem {
         return;
       }
 
-      const { statusCode, body } = await this.makeRequest(assembledVariables);
+      const { statusCode, body } = await this.makeRequest(assembledVariables, headers);
 
       res
         .status(statusCode)
@@ -273,13 +306,13 @@ export default class Route implements IMountableItem {
   // areVariablesValid(variables: {}) {}
 
   transformRequest(fn: AxiosTransformer): this {
-    this.transformRequestFn = fn;
+    this.transformRequestFn.push(fn);
 
     return this;
   }
 
   transformResponse(fn: AxiosTransformer): this {
-    this.transformResponseFn = fn;
+    this.transformResponseFn.push(fn);
 
     return this;
   }
@@ -329,7 +362,7 @@ export default class Route implements IMountableItem {
       );
   }
 
-  private async makeRequest(variables: {}): Promise<IResponse> {
+private async makeRequest(variables: {}, headers: {} = {}): Promise<IResponse> {
     const { axios, schema, operationName } = this;
 
     const config: AxiosRequestConfig = {
@@ -338,15 +371,12 @@ export default class Route implements IMountableItem {
         variables,
         operationName,
       },
+
+      headers,
+
+      transformRequest: this.transformRequestFn,
+      transformResponse: this.transformResponseFn,
     };
-
-    if (this.transformRequestFn) {
-      config.transformRequest = this.transformRequestFn;
-    }
-
-    if (this.transformResponseFn) {
-      config.transformResponse = this.transformResponseFn;
-    }
 
     try {
       const { data, status } = await axios(config);

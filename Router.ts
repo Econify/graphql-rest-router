@@ -13,6 +13,7 @@ interface IGlobalConfiguration {
   autoDiscoverEndpoints?: boolean;
   optimizeQueryRequest?: boolean;
   headers?: {};
+  passThroughHeaders?: string[];
   auth?: AxiosBasicCredentials;
   proxy?: AxiosProxyConfig;
 }
@@ -35,6 +36,7 @@ export default class Router {
   public routes: Route[] = [];
   public modules: IMountableItem[] = [];
 
+  private passThroughHeaders: string[] = [];
   private axios: AxiosInstance;
 
   constructor(public endpoint: string, schema: string, assignedConfiguration?: IGlobalConfiguration) {
@@ -42,6 +44,7 @@ export default class Router {
       auth,
       proxy,
       defaultTimeoutInMs: timeout,
+      passThroughHeaders,
       ...options
     } = {
       ...DEFAULT_CONFIGURATION,
@@ -66,6 +69,11 @@ export default class Router {
 
     this.schema = parse(schema);
     this.axios = axios.create(axiosConfig);
+
+    if (passThroughHeaders) {
+      this.passThroughHeaders = passThroughHeaders;
+    }
+
     this.options = options;
   }
 
@@ -84,20 +92,26 @@ export default class Router {
     return schema;
   }
 
-  mount(operationName: string, options?: {}): Route;
-  mount(mountableItem: IMountableItem, options?: {}): IMountableItem;
-  mount(operationNameOrMountableItem: string | IMountableItem, options?: {}): IMountableItem {
+  mount(operationName: string, options?: any): Route;
+  mount(mountableItem: IMountableItem, options?: any): IMountableItem;
+  mount(operationNameOrMountableItem: string | IMountableItem, options?: any): IMountableItem {
     if (typeof operationNameOrMountableItem === 'string') {
       const { schema, axios } = this;
       const operationName = operationNameOrMountableItem;
 
+      const passThroughHeaders = Boolean(options)
+        ? [...this.passThroughHeaders, ...options.passThroughHeaders]
+        : [...this.passThroughHeaders];
+
       const routeOptions: IConstructorRouteOptions = {
-        operationName: operationNameOrMountableItem,
+        ...options,
+
+        operationName,
 
         axios,
         schema,
 
-        ...options,
+        passThroughHeaders,
       };
 
       const graphQLRoute = new Route(routeOptions, this);

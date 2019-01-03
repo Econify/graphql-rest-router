@@ -1,11 +1,15 @@
+import IMountableItem from './IMountableItem';
+import Router from './Router';
 import { DocumentNode, parse, print, getOperationAST } from 'graphql';
 import { AxiosTransformer, AxiosInstance, AxiosRequestConfig } from 'axios';
 import * as express from 'express';
 
+const PATH_VARIABLES_REGEX = /:([A-Za-z]+)/g
+
 export interface IConstructorRouteOptions {
   schema: DocumentNode | string; // GraphQL Document Type
   operationName: string;
-
+  axios: AxiosInstance;
   path?: string;
   cacheTimeInMs?: number;
   method?: string;
@@ -23,13 +27,14 @@ export interface IRouteOptions {
   defaultVariables?: {};
 }
 
-interface IOperationVariable {
+export interface IOperationVariable {
   name: string;
   required: boolean;
+  type: string;
   defaultValue?: string | boolean | number;
 }
 
-interface IResponse {
+export interface IResponse {
   statusCode: number;
   body: {};
 }
@@ -42,6 +47,23 @@ enum EHTTPMethod {
 }
 */
 
+function translateVariableType(node: any): any {
+  if (node.type.kind === 'NonNullType') {
+    return translateVariableType(node.type);
+  }
+
+  switch (node.type.name.value) {
+    case 'Int':
+      return 'number';
+    case 'Boolean':
+      return 'boolean';
+    case 'String':
+    default:
+      return 'string';
+
+  }
+}
+
 function cleanPath(path: string): string {
   if (path[0] === '/') {
     return path;
@@ -50,7 +72,7 @@ function cleanPath(path: string): string {
   return `/${path}`;
 }
 
-export default class Route {
+export default class Route implements IMountableItem {
   public path!: string;
   public httpMethod: string = 'get';
 
@@ -62,6 +84,7 @@ export default class Route {
   // the change
   private configurationIsFrozen: boolean = false;
 
+  private axios!: AxiosInstance;
   private schema!: DocumentNode;
 
   private operationName!: string;
@@ -75,7 +98,7 @@ export default class Route {
 
   private cacheTimeInMs: number = 0;
 
-  constructor(configuration: IConstructorRouteOptions, private axios: AxiosInstance) {
+  constructor(configuration: IConstructorRouteOptions, private router?: Router) {
     this.configureRoute(configuration);
   }
 
@@ -90,6 +113,7 @@ export default class Route {
     }
 
     this.schema = typeof schema === 'string' ? parse(schema) : schema;
+    this.axios = configuration.axios;
 
     this.setOperationName(operationName);
 
@@ -98,6 +122,12 @@ export default class Route {
     }
 
     this.withOptions(options);
+  }
+
+  setRouter(router: Router): this {
+    this.router = router;
+
+    return this;
   }
 
   at(path: string): this {
@@ -118,6 +148,7 @@ export default class Route {
       (node: any): IOperationVariable => ({
         name: node.variable.name.value,
         required: node.type.kind === 'NonNullType',
+        type: translateVariableType(node),
         defaultValue: node.defaultValue,
       })
     );
@@ -235,6 +266,10 @@ export default class Route {
     throw new Error('Not available! Submit PR');
   }
 
+  asMetal() {
+    throw new Error('Not available! Submit PR');
+  }
+
   // areVariablesValid(variables: {}) {}
 
   transformRequest(fn: AxiosTransformer): this {
@@ -253,6 +288,45 @@ export default class Route {
     this.cacheTimeInMs = 0;
 
     return this;
+  }
+
+  get queryVariables(): IOperationVariable[] {
+    if (this.httpMethod === 'post') {
+      return [];
+    }
+
+    return this.nonPathVariables;
+  }
+
+  get bodyVariables(): IOperationVariable[] {
+    if (this.httpMethod === 'get') {
+      return [];
+    }
+
+    return this.nonPathVariables;
+  }
+
+  get pathVariables(): IOperationVariable[] {
+    const matches = this.path.match(PATH_VARIABLES_REGEX);
+
+    if (!matches) {
+      return [];
+    }
+
+    const pathVariableNames = matches.map(match => match.substr(1));
+
+    return this.operationVariables.filter(
+      ({ name }) => pathVariableNames.includes(name)
+    );
+  }
+
+  get nonPathVariables(): IOperationVariable[] {
+    const pathVariableNames = this.pathVariables.map(({ name }) => name);
+
+    return this.operationVariables
+      .filter(
+        ({ name }) => !pathVariableNames.includes(name)
+      );
   }
 
   private async makeRequest(variables: {}): Promise<IResponse> {

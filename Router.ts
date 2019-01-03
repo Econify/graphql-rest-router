@@ -1,3 +1,4 @@
+import IMountableItem from './IMountableItem';
 import ICacheEngine from './ICacheEngine';
 import Route, { IConstructorRouteOptions } from './Route';
 import express from 'express';
@@ -27,22 +28,13 @@ const DEFAULT_CONFIGURATION: IGlobalConfiguration = {
   headers: { 'x-graphql-rest-router-version': version },
 };
 
-function resolveOptionsForMount(operationNameOrOptions: string | {}, optionsOrNull?: {}): any {
-  // Combine operation name and options when using argument overloading
-  if (typeof operationNameOrOptions === 'string') {
-    return {
-      ...optionsOrNull,
-      operationName: operationNameOrOptions,
-    };
-  }
-
-  return operationNameOrOptions;
-}
-
 export default class Router {
   private schema: DocumentNode;
   private options: IGlobalConfiguration;
-  private routes: Route[] = [];
+
+  public routes: Route[] = [];
+  public modules: IMountableItem[] = [];
+
   private axios: AxiosInstance;
 
   constructor(public endpoint: string, schema: string, assignedConfiguration?: IGlobalConfiguration) {
@@ -92,18 +84,38 @@ export default class Router {
     return schema;
   }
 
-  mount(options: {}): Route;
-  mount(operationName: string, options: {}): Route;
-  mount(operationNameOrOptions: string | {}, optionsOrNull?: {}): Route {
-    const options = resolveOptionsForMount(operationNameOrOptions, optionsOrNull);
-    const schema = this.queryForOperation(options.operationName);
+  mount(operationName: string, options?: {}): Route;
+  mount(mountableItem: IMountableItem, options?: {}): IMountableItem;
+  mount(operationNameOrMountableItem: string | IMountableItem, options?: {}): IMountableItem {
+    if (typeof operationNameOrMountableItem === 'string') {
+      const { schema, axios } = this;
+      const operationName = operationNameOrMountableItem;
 
-    const routeOptions: IConstructorRouteOptions = { schema, ...options };
-    const route: Route = new Route(routeOptions, this.axios);
-    
-    this.routes.push(route);
+      const routeOptions: IConstructorRouteOptions = {
+        operationName: operationNameOrMountableItem,
 
-    return route;
+        axios,
+        schema,
+
+        ...options,
+      };
+
+      const graphQLRoute = new Route(routeOptions, this);
+
+      this.routes.push(graphQLRoute);
+
+      return graphQLRoute;
+    }
+
+    const mountableItem = operationNameOrMountableItem;
+
+    const moduleRoute = mountableItem
+                          .withOptions(options)
+                          .setRouter(this);
+
+    this.modules.push(moduleRoute);
+
+    return moduleRoute;
   }
 
   listen(port: number, callback?: () => void) {
@@ -113,7 +125,7 @@ export default class Router {
   asExpressRouter() {
     const router: any = express.Router();
 
-    this.routes.forEach((route) => {
+    [...this.modules, ...this.routes].forEach((route) => {
       const { path, httpMethod } = route;
       const routeFn = route.asExpressRoute();
 

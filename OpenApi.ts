@@ -1,8 +1,7 @@
 import IMountableItem from './IMountableItem';
 import describeRouteVariables from './describeRouteVariables';
 import Router from './Router';
-import Route, { IOperationVariable } from './Route';
-import express from 'express';
+import Route, { IOperationVariable } from './Route'; import express from 'express';
 
 interface IOpenApiOptions {
   title: string;
@@ -35,51 +34,101 @@ interface IParameterItemTypeOrRef {
 interface IBuildParametersArguments {
   variableDefinitions: IOperationVariable[];
   variableLocation: string;
+  refLocation: string;
 }
 
 const PATH_VARIABLES_REGEX = /:([A-Za-z]+)/g
+
+function translateScalarType(scalarType: string): string {
+  switch (scalarType) {
+    case 'Int':
+      return 'number';
+    case 'Boolean':
+      return 'boolean';
+    case 'String':
+    default:
+      return 'string';
+  }
+}
+
+function buildScalarDefinition(node: any): any {
+  const scalarType = translateScalarType(node.name);
+
+  const scalarDoc: any = {
+    type: scalarType,
+    description: node.description,
+  };
+
+  return scalarDoc;
+}
+
+function buildObjectDefinition(node: any): any {
+  const objectDoc: any = {};
+
+  objectDoc.type = 'object';
+  objectDoc.properties = {};
+
+  node.inputFields.forEach((field: any) => {
+    const { type: fieldNode } = field;
+
+    objectDoc.properties[field.name] = buildDefinition(fieldNode);
+  });
+
+  return objectDoc;
+}
+
+function buildDefinition(node: any): any {
+  switch (node.kind) {
+    case 'INPUT_OBJECT':
+      return buildObjectDefinition(node);
+    case 'ENUM':
+      return buildEnumDefinition(node);
+    case 'SCALAR':
+    default:
+      return buildScalarDefinition(node);
+  }
+}
+
+function buildEnumDefinition(node: any): any {
+  const enumDoc: any = {
+    type: 'string',
+    description: node.description,
+    enum: [],
+  };
+
+  node.enumValues.forEach((enumValue: any) => {
+    enumDoc.enum.push(enumValue.name);
+  });
+
+  return enumDoc;
+}
 
 function openApiPath(path: string): string {
   return path.replace(PATH_VARIABLES_REGEX, '{$1}');
 }
 
-function resolveRefOrType(variableType: string): IParameterItemTypeOrRef {
-  switch (variableType) {
-    case 'String':
-      return { type: 'string' };
-    case 'Boolean':
-      return { type: 'boolean' };
-    case 'Int':
-      return { type: 'number' };
-    default:
-      return { '$ref': `#/definitions/${variableType}` };
-  }
-}
-
 // TODO: Return Type and Attempt to get description from graphql
-function buildParametersArray({ variableDefinitions, variableLocation }: IBuildParametersArguments): IParameter[] {
+function buildParametersArray({ variableDefinitions, variableLocation, refLocation }: IBuildParametersArguments): IParameter[] {
   return variableDefinitions.map(
     (variableDefinition: IOperationVariable): IParameter => {
       const parameter: IParameter = {
         name: variableDefinition.name,
         required: variableDefinition.required,
-        default: variableDefinition.defaultValue,
+        // default: variableDefinition.defaultValue,
         in: variableLocation,
       };
 
       if (variableDefinition.array) {
         parameter.schema = {
           type: 'array',
-          items: resolveRefOrType(variableDefinition.type),
+          items: {
+            '$ref': `${refLocation}/${variableDefinition.type}`
+          },
         };
       } else {
-        const refOrType = resolveRefOrType(variableDefinition.type);
-        
-        if (refOrType.type) {
-          parameter.type = refOrType.type;
-        } else {
-          parameter.schema = refOrType;
-        }
+        parameter.schema = {
+          '$ref': `${refLocation}/${variableDefinition.type}`
+        };
       }
 
       return parameter;
@@ -87,14 +136,14 @@ function buildParametersArray({ variableDefinitions, variableLocation }: IBuildP
   );
 }
 
-export class V2 implements IMountableItem {
+class MountableDocument implements IMountableItem {
   public path: string = '/docs/openapi/v2';
   public httpMethod: string = 'get';
 
-  constructor(private options: IOpenApiOptions, private router?: Router) {
+  constructor(protected options: IOpenApiOptions, protected router?: Router) {
   }
 
-  setRouter(router: Router): this {
+  onMount(router: Router): this {
     this.router = router;
 
     return this;
@@ -106,7 +155,35 @@ export class V2 implements IMountableItem {
     return this;
   }
 
-  private async generateDocumentation(): Promise<any> {
+  protected async generateDocumentation(): Promise<string> {
+    return '';
+  }
+
+  withOptions(options: {}): this {
+    return this;
+  }
+
+  asExpressRoute(): (req: express.Request, res: express.Response) => Promise<void> {
+    const generateDoc = this.generateDocumentation();
+
+    return async (req: express.Request, res: express.Response) => {
+      const doc = await generateDoc;
+
+      res
+        .status(200)
+        .json(doc);
+    }
+  }
+
+  asKoaRoute() {
+    throw new Error('not yet implemented');
+  }
+
+  asMetal() {
+    throw new Error('not yet implemented');
+  }
+
+  protected getRouter(): Router {
     const { router } = this;
 
     if (!router) {
@@ -116,6 +193,14 @@ export class V2 implements IMountableItem {
         interface.
       `);
     }
+    
+    return router;
+  }
+}
+
+export class V2 extends MountableDocument {
+  protected async generateDocumentation(): Promise<any> {
+    const router = this.getRouter();
 
     try {
       const {
@@ -189,21 +274,24 @@ export class V2 implements IMountableItem {
         routeDoc.parameters.push(
           ...buildParametersArray({
             variableDefinitions: route.queryVariables,
-            variableLocation: 'query'
+            variableLocation: 'query',
+            refLocation: '#/definitions',
           })
         );
 
         routeDoc.parameters.push(
           ...buildParametersArray({
             variableDefinitions: route.pathVariables,
-            variableLocation: 'path'
+            variableLocation: 'path',
+            refLocation: '#/definitions',
           })
         );
 
         routeDoc.parameters.push(
           ...buildParametersArray({
             variableDefinitions: route.bodyVariables,
-            variableLocation: 'body'
+            variableLocation: 'body',
+            refLocation: '#/definitions',
           })
         );
       });
@@ -213,36 +301,7 @@ export class V2 implements IMountableItem {
       Object.keys(introspectedVariableDefinitions).forEach((variableName) => {
         const variableDefinition: any = introspectedVariableDefinitions[variableName];
 
-        const definitionDoc: any = page.definitions[variableName] = {};
-
-        if (variableDefinition.kind === 'INPUT_OBJECT') {
-          definitionDoc.type = 'object';
-          definitionDoc.properties = {};
-
-          variableDefinition.inputFields.forEach((field: any) => {
-            const inputDoc: any = definitionDoc.properties[field.name] = {};
-
-            inputDoc.type = 'string';
-            inputDoc.description = field.type.description;
-
-            if (field.type.kind === 'ENUM') {
-              inputDoc.enum = [];
-
-              field.type.enumValues.forEach((enumValue: any) => {
-                inputDoc.enum.push(enumValue.name);
-              });
-            }
-          });
-        }
-
-        if (variableDefinition.kind === 'ENUM') {
-          definitionDoc.type = 'string';
-          definitionDoc.enum = [];
-
-          variableDefinition.enumValues.forEach((enumValue: any) => {
-            definitionDoc.enum.push(enumValue.name);
-          });
-        }
+        page.definitions[variableName] = buildDefinition(variableDefinition);
       });
 
       return page;
@@ -252,30 +311,98 @@ export class V2 implements IMountableItem {
       };
     }
   }
+}
 
-  withOptions(options: {}): this {
-    return this;
-  }
+export class V3 extends MountableDocument {
+  protected async generateDocumentation(): Promise<any> {
+    const { options } = this;
 
-  asExpressRoute(): (req: express.Request, res: express.Response) => void {
-    const generateDoc = this.generateDocumentation();
+    const doc: any = {};
 
-    return (req: express.Request, res: express.Response) => {
-      generateDoc.then(
-        (doc) => {
-          res
-            .status(200)
-            .json(doc);
-        }
-      );
+    doc.openapi = '3.0.0';
+    doc.info = {};
+    doc.info.title = options.title;
+    doc.info.version = options.version;
+
+    doc.paths = {};
+    doc.components = {};
+
+    if (options.license) {
+      doc.license = {};
+      doc.license.name = options.license;
     }
-  }
 
-  asKoaRoute() {
-    throw new Error('not yet implemented');
-  }
+    if (options.host) { 
+      doc.servers = [];
 
-  asMetal() {
-    throw new Error('not yet implemented');
+      doc.servers.push({
+        url: `${options.host}${options.basePath || ''}`,
+      });
+    }
+
+    const router = this.getRouter();
+
+    router.routes.forEach((route) => {
+      const { path, httpMethod } = route;
+
+      const docPath = openApiPath(path);
+
+      if (!doc.paths[docPath]) {
+        doc.paths[docPath] = {};
+      }
+
+      const routeDoc: any = doc.paths[docPath][httpMethod] = {};
+
+      routeDoc.responses = {};
+
+      routeDoc.responses.default = {};
+      routeDoc.responses.default.description = 'OK';
+
+      routeDoc.parameters = [];
+
+      routeDoc.parameters.push(
+        ...buildParametersArray({
+          variableDefinitions: route.queryVariables,
+          variableLocation: 'query',
+          refLocation: '#/components/schemas',
+        })
+      );
+
+      routeDoc.parameters.push(
+        ...buildParametersArray({
+          variableDefinitions: route.pathVariables,
+          variableLocation: 'path',
+          refLocation: '#/components/schemas',
+        })
+      );
+
+      routeDoc.parameters.push(
+        ...buildParametersArray({
+          variableDefinitions: route.bodyVariables,
+          variableLocation: 'body',
+          refLocation: '#/components/schemas',
+        })
+      );
+    });
+
+    doc.components = {};
+    doc.components.schemas = {};
+
+    try {
+      const introspectedVariableDefinitions: any = await describeRouteVariables(router);
+
+      Object.keys(introspectedVariableDefinitions).forEach((variableName) => {
+        const variableDefinition: any = introspectedVariableDefinitions[variableName];
+
+        doc.components.schemas[variableName] = buildDefinition(variableDefinition);
+      });
+
+      return doc;
+    } catch (error) {
+      return {
+        error: error.message,
+      };
+    }
+
   }
 }

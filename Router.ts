@@ -114,22 +114,22 @@ export default class Router {
         passThroughHeaders,
       };
 
-      const graphQLRoute = new Route(routeOptions, this);
+      const graphQLRoute = new Route(routeOptions);
 
       this.routes.push(graphQLRoute);
 
       return graphQLRoute;
     }
 
-    const mountableItem = operationNameOrMountableItem;
+    const mountedItem = operationNameOrMountableItem.withOptions(options);
 
-    const moduleRoute = mountableItem
-                          .withOptions(options)
-                          .setRouter(this);
+    if (mountedItem.onMount) {
+      mountedItem.onMount(this);
+    }
 
-    this.modules.push(moduleRoute);
+    this.modules.push(mountedItem);
 
-    return moduleRoute;
+    return mountedItem;
   }
 
   listen(port: number, callback?: () => void) {

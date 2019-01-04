@@ -1,6 +1,5 @@
 import IMountableItem from './IMountableItem';
 import { IncomingHttpHeaders } from 'http';
-import Router from './Router';
 import { DocumentNode, parse, print, getOperationAST } from 'graphql';
 import { AxiosTransformer, AxiosInstance, AxiosRequestConfig } from 'axios';
 import * as express from 'express';
@@ -104,7 +103,7 @@ export default class Route implements IMountableItem {
 
   private cacheTimeInMs: number = 0;
 
-  constructor(configuration: IConstructorRouteOptions, private router?: Router) {
+  constructor(configuration: IConstructorRouteOptions) {
     this.configureRoute(configuration);
   }
 
@@ -144,12 +143,6 @@ export default class Route implements IMountableItem {
     return passThroughHeaders;
   }
 
-  setRouter(router: Router): this {
-    this.router = router;
-
-    return this;
-  }
-
   whitelistHeaderForPassThrough(header: string): this {
     this.passThroughHeaders.push(header);
 
@@ -176,7 +169,7 @@ export default class Route implements IMountableItem {
         required: node.type.kind === 'NonNullType',
         type: translateVariableType(node),
         array: isVariableArray(node), 
-        defaultValue: node.defaultValue,
+        defaultValue: (node.defaultValue || {}).value,
       })
     );
   }

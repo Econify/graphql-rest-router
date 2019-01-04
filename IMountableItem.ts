@@ -12,7 +12,8 @@ export default interface IMountableItem {
   asMetal: () => void;
 
   withOptions: (options: any) => this;
-  setRouter: (router: Router) => this
+
+  onMount?: (router: Router) => this
 }
 
 export interface IMountableItemClass {

@@ -1,14 +1,20 @@
+import IMountableItem from './IMountableItem';
+import { IncomingHttpHeaders } from 'http';
 import { DocumentNode, parse, print, getOperationAST } from 'graphql';
 import { AxiosTransformer, AxiosInstance, AxiosRequestConfig } from 'axios';
 import * as express from 'express';
 
+const PATH_VARIABLES_REGEX = /:([A-Za-z]+)/g
+
 export interface IConstructorRouteOptions {
   schema: DocumentNode | string; // GraphQL Document Type
   operationName: string;
-
+  axios: AxiosInstance;
   path?: string;
   cacheTimeInMs?: number;
   method?: string;
+
+  passThroughHeaders?: string[];
 
   staticVariables?: {};
   defaultVariables?: {};
@@ -18,18 +24,21 @@ export interface IRouteOptions {
   path?: string;
   cacheTimeInMs?: number;
   method?: string;
+  passThroughHeaders?: string[];
 
   staticVariables?: {};
   defaultVariables?: {};
 }
 
-interface IOperationVariable {
+export interface IOperationVariable {
   name: string;
   required: boolean;
+  type: string;
+  array: boolean;
   defaultValue?: string | boolean | number;
 }
 
-interface IResponse {
+export interface IResponse {
   statusCode: number;
   body: {};
 }
@@ -42,6 +51,22 @@ enum EHTTPMethod {
 }
 */
 
+function isVariableArray(node: any): boolean {
+  if (node.type.kind === 'NonNullType') {
+    return isVariableArray(node.type);
+  }
+
+  return node.type.kind === 'ListType';
+}
+
+function translateVariableType(node: any): string {
+  if (node.type.kind === 'NonNullType' || node.type.kind === 'ListType') {
+    return translateVariableType(node.type);
+  }
+
+  return node.type.name.value;
+}
+
 function cleanPath(path: string): string {
   if (path[0] === '/') {
     return path;
@@ -50,9 +75,12 @@ function cleanPath(path: string): string {
   return `/${path}`;
 }
 
-export default class Route {
+export default class Route implements IMountableItem {
   public path!: string;
   public httpMethod: string = 'get';
+
+  public passThroughHeaders: string[] = [];
+  public operationVariables!: IOperationVariable[];
 
   // TODO:
   // The route should be frozen on any type of export
@@ -62,20 +90,20 @@ export default class Route {
   // the change
   private configurationIsFrozen: boolean = false;
 
+  private axios!: AxiosInstance;
   private schema!: DocumentNode;
 
   private operationName!: string;
-  private operationVariables!: IOperationVariable[];
 
-  private transformRequestFn?: AxiosTransformer;
-  private transformResponseFn?: AxiosTransformer;
+  private transformRequestFn: AxiosTransformer[] = [];
+  private transformResponseFn: AxiosTransformer[] = [];
 
   private staticVariables: {} = {};
   private defaultVariables: {} = {};
 
   private cacheTimeInMs: number = 0;
 
-  constructor(configuration: IConstructorRouteOptions, private axios: AxiosInstance) {
+  constructor(configuration: IConstructorRouteOptions) {
     this.configureRoute(configuration);
   }
 
@@ -90,6 +118,7 @@ export default class Route {
     }
 
     this.schema = typeof schema === 'string' ? parse(schema) : schema;
+    this.axios = configuration.axios;
 
     this.setOperationName(operationName);
 
@@ -98,6 +127,26 @@ export default class Route {
     }
 
     this.withOptions(options);
+  }
+
+  private filterHeadersForPassThrough(headers: IncomingHttpHeaders): IncomingHttpHeaders {
+    const passThroughHeaders: IncomingHttpHeaders = {};
+
+    this.passThroughHeaders.forEach(
+      (header: string) => {
+        if (headers.hasOwnProperty(header)) {
+          passThroughHeaders[header] = headers[header];
+        }
+      }
+    );
+
+    return passThroughHeaders;
+  }
+
+  whitelistHeaderForPassThrough(header: string): this {
+    this.passThroughHeaders.push(header);
+
+    return this
   }
 
   at(path: string): this {
@@ -118,7 +167,9 @@ export default class Route {
       (node: any): IOperationVariable => ({
         name: node.variable.name.value,
         required: node.type.kind === 'NonNullType',
-        defaultValue: node.defaultValue,
+        type: translateVariableType(node),
+        array: isVariableArray(node), 
+        defaultValue: (node.defaultValue || {}).value,
       })
     );
   }
@@ -141,6 +192,7 @@ export default class Route {
       defaultVariables,
       staticVariables,
       cacheTimeInMs,
+      passThroughHeaders,
     } = options;
 
     if (path) {
@@ -149,6 +201,10 @@ export default class Route {
 
     if (httpMethod) {
       this.as(httpMethod);
+    }
+
+    if (passThroughHeaders) {
+      passThroughHeaders.forEach(this.whitelistHeaderForPassThrough.bind(this));
     }
 
     if (defaultVariables) {
@@ -215,6 +271,8 @@ export default class Route {
       const assembledVariables = this.assembleVariables(providedVariables);
       const missingVariables = this.missingVariables(assembledVariables);
 
+      const headers = this.filterHeadersForPassThrough(req.headers);
+
       if (missingVariables.length) {
         res.json({
           error: 'Missing Variables',
@@ -223,7 +281,7 @@ export default class Route {
         return;
       }
 
-      const { statusCode, body } = await this.makeRequest(assembledVariables);
+      const { statusCode, body } = await this.makeRequest(assembledVariables, headers);
 
       res
         .status(statusCode)
@@ -235,16 +293,20 @@ export default class Route {
     throw new Error('Not available! Submit PR');
   }
 
+  asMetal() {
+    throw new Error('Not available! Submit PR');
+  }
+
   // areVariablesValid(variables: {}) {}
 
   transformRequest(fn: AxiosTransformer): this {
-    this.transformRequestFn = fn;
+    this.transformRequestFn.push(fn);
 
     return this;
   }
 
   transformResponse(fn: AxiosTransformer): this {
-    this.transformResponseFn = fn;
+    this.transformResponseFn.push(fn);
 
     return this;
   }
@@ -255,7 +317,46 @@ export default class Route {
     return this;
   }
 
-  private async makeRequest(variables: {}): Promise<IResponse> {
+  get queryVariables(): IOperationVariable[] {
+    if (this.httpMethod === 'post') {
+      return [];
+    }
+
+    return this.nonPathVariables;
+  }
+
+  get bodyVariables(): IOperationVariable[] {
+    if (this.httpMethod === 'get') {
+      return [];
+    }
+
+    return this.nonPathVariables;
+  }
+
+  get pathVariables(): IOperationVariable[] {
+    const matches = this.path.match(PATH_VARIABLES_REGEX);
+
+    if (!matches) {
+      return [];
+    }
+
+    const pathVariableNames = matches.map(match => match.substr(1));
+
+    return this.operationVariables.filter(
+      ({ name }) => pathVariableNames.includes(name)
+    );
+  }
+
+  get nonPathVariables(): IOperationVariable[] {
+    const pathVariableNames = this.pathVariables.map(({ name }) => name);
+
+    return this.operationVariables
+      .filter(
+        ({ name }) => !pathVariableNames.includes(name)
+      );
+  }
+
+  private async makeRequest(variables: {}, headers: {} = {}): Promise<IResponse> {
     const { axios, schema, operationName } = this;
 
     const config: AxiosRequestConfig = {
@@ -264,15 +365,12 @@ export default class Route {
         variables,
         operationName,
       },
+
+      headers,
+
+      transformRequest: this.transformRequestFn,
+      transformResponse: this.transformResponseFn,
     };
-
-    if (this.transformRequestFn) {
-      config.transformRequest = this.transformRequestFn;
-    }
-
-    if (this.transformResponseFn) {
-      config.transformResponse = this.transformResponseFn;
-    }
 
     try {
       const { data, status } = await axios(config);

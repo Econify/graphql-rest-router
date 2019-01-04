@@ -1,3 +1,4 @@
+import IMountableItem from './IMountableItem';
 import ICacheEngine from './ICacheEngine';
 import Route, { IConstructorRouteOptions } from './Route';
 import express from 'express';
@@ -12,6 +13,7 @@ interface IGlobalConfiguration {
   autoDiscoverEndpoints?: boolean;
   optimizeQueryRequest?: boolean;
   headers?: {};
+  passThroughHeaders?: string[];
   auth?: AxiosBasicCredentials;
   proxy?: AxiosProxyConfig;
 }
@@ -27,29 +29,22 @@ const DEFAULT_CONFIGURATION: IGlobalConfiguration = {
   headers: { 'x-graphql-rest-router-version': version },
 };
 
-function resolveOptionsForMount(operationNameOrOptions: string | {}, optionsOrNull?: {}): any {
-  // Combine operation name and options when using argument overloading
-  if (typeof operationNameOrOptions === 'string') {
-    return {
-      ...optionsOrNull,
-      operationName: operationNameOrOptions,
-    };
-  }
-
-  return operationNameOrOptions;
-}
-
 export default class Router {
   private schema: DocumentNode;
   private options: IGlobalConfiguration;
-  private routes: Route[] = [];
-  private axios: AxiosInstance;
+
+  public routes: Route[] = [];
+  public modules: IMountableItem[] = [];
+  public axios: AxiosInstance;
+
+  private passThroughHeaders: string[] = [];
 
   constructor(public endpoint: string, schema: string, assignedConfiguration?: IGlobalConfiguration) {
     const {
       auth,
       proxy,
       defaultTimeoutInMs: timeout,
+      passThroughHeaders,
       ...options
     } = {
       ...DEFAULT_CONFIGURATION,
@@ -74,6 +69,11 @@ export default class Router {
 
     this.schema = parse(schema);
     this.axios = axios.create(axiosConfig);
+
+    if (passThroughHeaders) {
+      this.passThroughHeaders = passThroughHeaders;
+    }
+
     this.options = options;
   }
 
@@ -92,18 +92,44 @@ export default class Router {
     return schema;
   }
 
-  mount(options: {}): Route;
-  mount(operationName: string, options: {}): Route;
-  mount(operationNameOrOptions: string | {}, optionsOrNull?: {}): Route {
-    const options = resolveOptionsForMount(operationNameOrOptions, optionsOrNull);
-    const schema = this.queryForOperation(options.operationName);
+  mount(operationName: string, options?: any): Route;
+  mount(mountableItem: IMountableItem, options?: any): IMountableItem;
+  mount(operationNameOrMountableItem: string | IMountableItem, options?: any): IMountableItem {
+    if (typeof operationNameOrMountableItem === 'string') {
+      const { schema, axios } = this;
+      const operationName = operationNameOrMountableItem;
 
-    const routeOptions: IConstructorRouteOptions = { schema, ...options };
-    const route: Route = new Route(routeOptions, this.axios);
-    
-    this.routes.push(route);
+      const passThroughHeaders = Boolean(options)
+        ? [...this.passThroughHeaders, ...options.passThroughHeaders]
+        : [...this.passThroughHeaders];
 
-    return route;
+      const routeOptions: IConstructorRouteOptions = {
+        ...options,
+
+        operationName,
+
+        axios,
+        schema,
+
+        passThroughHeaders,
+      };
+
+      const graphQLRoute = new Route(routeOptions);
+
+      this.routes.push(graphQLRoute);
+
+      return graphQLRoute;
+    }
+
+    const mountedItem = operationNameOrMountableItem.withOptions(options);
+
+    if (mountedItem.onMount) {
+      mountedItem.onMount(this);
+    }
+
+    this.modules.push(mountedItem);
+
+    return mountedItem;
   }
 
   listen(port: number, callback?: () => void) {
@@ -113,7 +139,7 @@ export default class Router {
   asExpressRouter() {
     const router: any = express.Router();
 
-    this.routes.forEach((route) => {
+    [...this.modules, ...this.routes].forEach((route) => {
       const { path, httpMethod } = route;
       const routeFn = route.asExpressRoute();
 

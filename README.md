@@ -12,7 +12,7 @@ GraphQL Rest Router allows you to expose an internal GraphQL API as a REST API.
 _Example Usage_
 ```js
 import GraphQLRestRouter from 'graphql-rest-router';
-import * as OpenApi from 'graphql-rest-router';
+import * as OpenApi from 'graphql-rest-router/OpenApi';
 
 const Schema = `
   query UserById($id: Int!) {

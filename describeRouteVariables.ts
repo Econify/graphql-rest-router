@@ -3,24 +3,28 @@ import Route from './Route';
 
 const TYPE_FRAGMENT = `
   fragment TypeFragment on __Type {
-    description
-    kind
-    name
-    enumValues {
-      name
-      description
-    }
+    ...InputField
     inputFields {
       name
       type {
-        kind
-        name
-        description
-        enumValues {
+        ...InputField
+        inputFields {
           name
-          description
+          type {
+            ...InputField
+          }
         }
       }
+    }
+  }
+
+  fragment InputField on __Type {
+    kind
+    name
+    description
+    enumValues {
+      name
+      description
     }
   }
 `;

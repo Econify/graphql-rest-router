@@ -56,8 +56,11 @@ function buildScalarDefinition(node: any): any {
 
   const scalarDoc: any = {
     type: scalarType,
-    description: node.description,
   };
+
+  if (node.description) {
+    scalarDoc.description = node.description;
+  }
 
   return scalarDoc;
 }
@@ -68,11 +71,13 @@ function buildObjectDefinition(node: any): any {
   objectDoc.type = 'object';
   objectDoc.properties = {};
 
-  node.inputFields.forEach((field: any) => {
-    const { type: fieldNode } = field;
+  if (node.inputFields) {
+    node.inputFields.forEach((field: any) => {
+      const { type: fieldNode } = field;
 
-    objectDoc.properties[field.name] = buildDefinition(fieldNode);
-  });
+      objectDoc.properties[field.name] = buildDefinition(fieldNode);
+    });
+  }
 
   return objectDoc;
 }
@@ -92,9 +97,12 @@ function buildDefinition(node: any): any {
 function buildEnumDefinition(node: any): any {
   const enumDoc: any = {
     type: 'string',
-    description: node.description,
     enum: [],
   };
+
+  if (node.description) {
+    enumDoc.description = node.description;
+  }
 
   node.enumValues.forEach((enumValue: any) => {
     enumDoc.enum.push(enumValue.name);

@@ -12,6 +12,8 @@ GraphQL Rest Router allows you to expose an internal GraphQL API as a REST API.
 _Example Usage_
 ```js
 import GraphQLRestRouter from 'graphql-rest-router';
+import * as OpenApi from 'graphql-rest-router';
+
 const Schema = `
   query UserById($id: Int!) {
     getUserById(id: $id) {
@@ -31,6 +33,22 @@ const Schema = `
   }
 `;
 
+const swaggerDoc = new OpenApi.V2({
+  title: 'Example API',
+  version: '1.0.0',
+
+  host: 'http://127.0.0.1',
+  basePath: '/api',
+});
+
+const openApiDoc = new OpenApi.V3({
+  title: 'Example API',
+  version: '1.0.0',
+
+  host: 'http://127.0.0.1',
+  basePath: '/api',
+});
+
 const api = new GraphQLRestRouter(url, Schema, {
   cacheEngine: GraphQLRestRouter.InMemoryCache,
 
@@ -43,8 +61,7 @@ const api = new GraphQLRestRouter(url, Schema, {
   },
 });
 
-api.mount({
-  operationName: 'UserByEmail'
+api.mount('UserByEmail', {
   path: '/user/:email',
 
   method: 'POST',
@@ -63,16 +80,12 @@ api.mount({
 api.mount('UserById'); // creates GET /UserById?id=:id
 
 api.mount('UserById').at('/:id') // creates GET /:id
-  .setCacheTimeInMs(200);
 
 api.mount('UserById').at('/:id').as('POST')
   .disableCache()
-  .modifyRequest(request => {
-    request.addHeader('x-jwt', 'test');
+  .transformRequest(headers => {
+    headers['x-context-jwt'] = '1234';
   })
-  .modifyResponse(response => {
-    response.setStatus(200);
-  });
 
 api.mount('UserById').withOptions({
   path: '/user/0',
@@ -83,8 +96,9 @@ api.mount('UserById').withOptions({
   }
 });
 
+api.mount(swaggerDoc).at('/docs/swagger');
+api.mount(openApiDoc).at('/docs/openapi');
+
 // Export Options
-api.asExpressRouter();
-api.asKoaRouter();
-api.listen(3000, () => console.log('Callback'));
+module.exports = api.asExpressRouter();
 ```

@@ -281,8 +281,7 @@ GraphQL Rest Router ships with two cache interfaces stock and supports any numbe
 InMemoryCache stores your cached route data on your server in memory. This can be used in development or with low TTLs in order to prevent a [thundering herd](https://en.wikipedia.org/wiki/Thundering_herd_problem) however it is strongly discouraged to use this in production. In Memory caches have the ability to deplete your system's resources and take down your instance of GraphQLRestRouter.
 
 ```js
-import GraphQLRestRouter from 'graphql-rest-router';
-import InMemoryCache from 'graphql-rest-router/InMemoryCache';
+import GraphQLRestRouter, { InMemoryCache } from 'graphql-rest-router';
 
 const api = new GraphQLRestRouter('http://localhost:1227', schema, {
   cacheEngine: new InMemoryCache(),
@@ -309,7 +308,7 @@ As GraphQL Rest Router exposes your API with new routes that aren't covered by G
 
 ### Open API (Preferred)
 ```js
-const OpenApi = require('graphql-rest-router/OpenApi');
+const { OpenApi } = require('graphql-rest-router');
 
 const documentation = new OpenApi.V3({
   title: 'My REST API', // REQUIRED!
@@ -326,7 +325,7 @@ api.mount(documentation).at('/docs/openapi');
 
 ### Swagger
 ```js
-const OpenApi = require('graphql-rest-router/OpenApi');
+const { OpenApi } = require('graphql-rest-router');
 
 const swaggerDocumentation = new OpenApi.V2({
   title: 'My REST API', // REQUIRED!

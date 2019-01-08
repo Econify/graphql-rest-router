@@ -21,21 +21,19 @@ api.listen(3000, () => {
 ```
 
 ## Table of Contents
-- [Overview / Introduction](/#)
-  - [Internal GraphQL Usage](/#)
-  - [External GraphQL Usage](/#)
-- [Documentation](/#)
-  - [Getting Started](/#)
-  - [Caching](/#)
-  - [Swagger / OpenAPI / Documentation](/#)
-  - [Custom Routes](/#)
-  - [Express.js Usage](/#)
-  - [KOA Usage](/#)
-  - [Examples](/#)
-- Misc
-  - [Typescript](/#)
-  - [Contributing](/#)
-  - [Support](/#)
+- [Overview / Introduction](#overview)
+  - [Internal GraphQL Usage](#internal-graphql-api)
+  - [External GraphQL Usage](#external-graphql-api)
+- [Documentation](#documentation)
+  - [Getting Started (Recommended)](#getting-started)
+  - [Creating Endpoints (Recommended)](#creating-endpoints)
+  - [Proxies / Authentication](#proxies-and-authentication)
+  - [Advanced Options](#advanced-configuration-of-graphql-rest-router)
+  - [Caching / Redis](#caching)
+  - [Swagger / OpenAPI / Documentation](#swagger--open-api)
+  - [Express.js Usage](#usage-with-express)
+  - [KOA Usage](#usage-with-koa)
+  - [Examples](#code-examples)
 
 # Overview
 GraphQL has gained addoption as a replacement to the conventional REST API and for good reason. Development Time/Time to Market are signficantly shortened when no longer requiring every application to build and maintain its own API.

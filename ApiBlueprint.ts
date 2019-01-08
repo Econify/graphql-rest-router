@@ -1,6 +1,6 @@
 import Router from './Router';
 import express from 'express';
-import IMountableItem from './IMountableItem';
+import { IMountableItem } from '.';
 
 export default class ApiBlueprint implements IMountableItem {
   public path: string = '/docs/blueprint';

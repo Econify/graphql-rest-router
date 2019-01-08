@@ -6,6 +6,7 @@ import {
 } from '.';
 import Route from './Route';
 import express from 'express';
+import bodyParser from 'body-parser';
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { parse, DocumentNode, getOperationAST } from 'graphql';
 import { version } from './package.json';
@@ -124,12 +125,19 @@ export default class Router {
     return mountedItem;
   }
 
+  // TODO: Temporarily using express as metal
   listen(port: number, callback?: () => void) {
-    throw new Error('Not Implemented');
+    const router = express();
+
+    router.use(this.asExpressRouter());
+
+    router.listen(port, callback);
   }
 
   asExpressRouter() {
     const router: any = express.Router();
+
+    router.use(bodyParser.json());
 
     [...this.modules, ...this.routes].forEach((route) => {
       const { path, httpMethod } = route;

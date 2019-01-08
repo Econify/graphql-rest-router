@@ -229,9 +229,9 @@ export default class Route implements IMountableItem {
 
   asExpressRoute() {
     return async (req: express.Request, res: express.Response) => {
-      const { query, params } = req;
+      const { query, params, body } = req;
       
-      const providedVariables = { ...query, ...params };
+      const providedVariables = { ...query, ...params, ...body };
 
       // Assemble variables from query, path and default values
       const assembledVariables = this.assembleVariables(providedVariables);
@@ -247,11 +247,12 @@ export default class Route implements IMountableItem {
         return;
       }
 
-      const { statusCode, body } = await this.makeRequest(assembledVariables, headers);
+      const { statusCode, body: responseBody } =
+        await this.makeRequest(assembledVariables, headers);
 
       res
         .status(statusCode)
-        .json(body);
+        .json(responseBody);
     };
   }
 

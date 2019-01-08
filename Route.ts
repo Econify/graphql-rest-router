@@ -48,6 +48,7 @@ export default class Route implements IMountableItem {
 
   public passThroughHeaders: string[] = [];
   public operationVariables!: IOperationVariable[];
+  public operationName!: string;
 
   // TODO:
   // The route should be frozen on any type of export
@@ -59,8 +60,6 @@ export default class Route implements IMountableItem {
 
   private axios!: AxiosInstance;
   private schema!: DocumentNode;
-
-  private operationName!: string;
 
   private transformRequestFn: AxiosTransformer[] = [];
   private transformResponseFn: AxiosTransformer[] = [];

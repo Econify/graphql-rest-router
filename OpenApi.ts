@@ -31,6 +31,10 @@ interface IBuildParametersArguments {
 
 const PATH_VARIABLES_REGEX = /:([A-Za-z]+)/g
 
+function resolveBodySchemaName(route: Route): string {
+  return `${route.operationName}Body`;
+}
+
 function translateScalarType(scalarType: string): string {
   switch (scalarType) {
     case 'Int':
@@ -74,6 +78,19 @@ function buildObjectDefinition(node: any): any {
   return objectDoc;
 }
 
+function buildBodyDefinition(variables: IOperationVariable[], refLocation: string): any {
+  const bodyDoc: any = {};
+
+  bodyDoc.type = 'object';
+  bodyDoc.properties = {};
+
+  variables.forEach((field: IOperationVariable) => {
+    bodyDoc.properties[field.name] = buildSchemaParameter(field, refLocation);
+  });
+
+  return bodyDoc;
+}
+
 function buildDefinition(node: any): any {
   switch (node.kind) {
     case 'INPUT_OBJECT':
@@ -107,32 +124,31 @@ function openApiPath(path: string): string {
   return path.replace(PATH_VARIABLES_REGEX, '{$1}');
 }
 
+function buildSchemaParameter(variableDefinition: IOperationVariable, refLocation: string): IParameterArraySchema | IParameterItemTypeOrRef {
+  if (variableDefinition.array) {
+    return {
+      type: 'array',
+      items: {
+        '$ref': `${refLocation}/${variableDefinition.type}`
+      },
+    };
+  }
+
+  return {
+    '$ref': `${refLocation}/${variableDefinition.type}`
+  };
+}
+
 // TODO: Return Type and Attempt to get description from graphql
 function buildParametersArray({ variableDefinitions, variableLocation, refLocation }: IBuildParametersArguments): IParameter[] {
   return variableDefinitions.map(
-    (variableDefinition: IOperationVariable): IParameter => {
-      const parameter: IParameter = {
-        name: variableDefinition.name,
-        required: variableDefinition.required,
-        // default: variableDefinition.defaultValue,
-        in: variableLocation,
-      };
-
-      if (variableDefinition.array) {
-        parameter.schema = {
-          type: 'array',
-          items: {
-            '$ref': `${refLocation}/${variableDefinition.type}`
-          },
-        };
-      } else {
-        parameter.schema = {
-          '$ref': `${refLocation}/${variableDefinition.type}`
-        };
-      }
-
-      return parameter;
-    }
+    (variableDefinition: IOperationVariable): IParameter => ({
+      name: variableDefinition.name,
+      required: variableDefinition.required,
+      in: variableLocation,
+      schema: buildSchemaParameter(variableDefinition, refLocation),
+      // default: variableDefinition.defaultValue,
+    })
   );
 }
 
@@ -322,6 +338,7 @@ export class V3 extends MountableDocument {
     const { options } = this;
 
     const doc: any = {};
+    const refLocation = '#/components/schemas';
 
     doc.openapi = '3.0.0';
     doc.info = {};
@@ -368,7 +385,7 @@ export class V3 extends MountableDocument {
         ...buildParametersArray({
           variableDefinitions: route.queryVariables,
           variableLocation: 'query',
-          refLocation: '#/components/schemas',
+          refLocation,
         })
       );
 
@@ -376,17 +393,23 @@ export class V3 extends MountableDocument {
         ...buildParametersArray({
           variableDefinitions: route.pathVariables,
           variableLocation: 'path',
-          refLocation: '#/components/schemas',
+          refLocation,
         })
       );
 
-      routeDoc.parameters.push(
-        ...buildParametersArray({
-          variableDefinitions: route.bodyVariables,
-          variableLocation: 'body',
-          refLocation: '#/components/schemas',
-        })
-      );
+      if (route.bodyVariables.length) {
+        const schemaName = resolveBodySchemaName(route);
+
+        routeDoc.requestBody = {
+          content: {
+            'application/json': {
+              schema: {
+                "$ref": `${refLocation}/${schemaName}`
+              },
+            },
+          },
+        };
+      }
     });
 
     doc.components = {};
@@ -400,6 +423,17 @@ export class V3 extends MountableDocument {
 
         doc.components.schemas[variableName] = buildDefinition(variableDefinition);
       });
+
+      // Build out definitions for each route to contain a "body" schema in case it's used
+      // for anything besides GET
+      router.routes.forEach(
+        (route) => {
+          const schemaName = resolveBodySchemaName(route);
+
+          doc.components.schemas[schemaName] =
+            buildBodyDefinition(route.bodyVariables, refLocation);
+        }
+      );
 
       return doc;
     } catch (error) {

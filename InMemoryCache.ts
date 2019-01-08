@@ -1,4 +1,4 @@
-import ICacheEngine from './ICacheEngine';
+import { ICacheEngine } from '.';
 
 const STORE_EXPIRATION_CHECK_IN_MS = 10;
 const DEFAULT_CACHE_TIME_IN_MS = 10;

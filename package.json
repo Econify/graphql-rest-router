@@ -3,7 +3,8 @@
   "version": "1.0.0-alpha.10",
   "description": "",
   "main": "index.js",
-  "files": ["*.js"],
+  "types": "./index.d.ts",
+  "files": ["*.js", "index.d.ts"],
   "scripts": {
     "build": "tsc -p .",
     "prepare": "npm run build",

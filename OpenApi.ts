@@ -1,16 +1,8 @@
-import IMountableItem from './IMountableItem';
+import { IMountableItem, IOperationVariable, IOpenApiOptions,  } from '.';
 import describeRouteVariables from './describeRouteVariables';
 import Router from './Router';
-import Route, { IOperationVariable } from './Route'; import express from 'express';
-
-interface IOpenApiOptions {
-  title: string;
-  version: string;
-  termsOfService?: string;
-  license?: string;
-  basePath?: string;
-  host?: string;
-}
+import Route from './Route';
+import express from 'express';
 
 interface IParameter {
   name: string;
@@ -145,10 +137,12 @@ function buildParametersArray({ variableDefinitions, variableLocation, refLocati
 }
 
 class MountableDocument implements IMountableItem {
-  public path: string = '/docs/openapi/v2';
+  public path: string = '/docs/openapi';
   public httpMethod: string = 'get';
 
-  constructor(protected options: IOpenApiOptions, protected router?: Router) {
+  protected router?: Router;
+
+  constructor(protected options: IOpenApiOptions) {
   }
 
   onMount(router: Router): this {
@@ -207,6 +201,8 @@ class MountableDocument implements IMountableItem {
 }
 
 export class V2 extends MountableDocument {
+  public path: string = '/docs/swagger';
+
   protected async generateDocumentation(): Promise<any> {
     const router = this.getRouter();
 

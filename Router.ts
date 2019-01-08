@@ -1,22 +1,14 @@
-import IMountableItem from './IMountableItem';
-import ICacheEngine from './ICacheEngine';
-import Route, { IConstructorRouteOptions } from './Route';
+import {
+  IGlobalConfiguration,
+  IMountableItem,
+  ICacheEngine,
+  IConstructorRouteOptions,
+} from '.';
+import Route from './Route';
 import express from 'express';
-import axios, { AxiosBasicCredentials, AxiosProxyConfig, AxiosInstance, AxiosRequestConfig } from 'axios';
+import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { parse, DocumentNode, getOperationAST } from 'graphql';
 import { version } from './package.json';
-
-interface IGlobalConfiguration {
-  cacheEngine?: ICacheEngine;
-  defaultTimeoutInMs?: number;
-  defaultCacheTimeInMs?: number;
-  autoDiscoverEndpoints?: boolean;
-  optimizeQueryRequest?: boolean;
-  headers?: {};
-  passThroughHeaders?: string[];
-  auth?: AxiosBasicCredentials;
-  proxy?: AxiosProxyConfig;
-}
 
 const DEFAULT_CONFIGURATION: IGlobalConfiguration = {
   cacheEngine: undefined,

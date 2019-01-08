@@ -1,47 +1,14 @@
-import IMountableItem from './IMountableItem';
+import {
+  IMountableItem, IConstructorRouteOptions, IRouteOptions,
+  IOperationVariable, IResponse,
+}  from '.';
+
 import { IncomingHttpHeaders } from 'http';
 import { DocumentNode, parse, print, getOperationAST } from 'graphql';
 import { AxiosTransformer, AxiosInstance, AxiosRequestConfig } from 'axios';
 import * as express from 'express';
 
 const PATH_VARIABLES_REGEX = /:([A-Za-z]+)/g
-
-export interface IConstructorRouteOptions {
-  schema: DocumentNode | string; // GraphQL Document Type
-  operationName: string;
-  axios: AxiosInstance;
-  path?: string;
-  cacheTimeInMs?: number;
-  method?: string;
-
-  passThroughHeaders?: string[];
-
-  staticVariables?: {};
-  defaultVariables?: {};
-}
-
-export interface IRouteOptions {
-  path?: string;
-  cacheTimeInMs?: number;
-  method?: string;
-  passThroughHeaders?: string[];
-
-  staticVariables?: {};
-  defaultVariables?: {};
-}
-
-export interface IOperationVariable {
-  name: string;
-  required: boolean;
-  type: string;
-  array: boolean;
-  defaultValue?: string | boolean | number;
-}
-
-export interface IResponse {
-  statusCode: number;
-  body: {};
-}
 
 /*
 enum EHTTPMethod {

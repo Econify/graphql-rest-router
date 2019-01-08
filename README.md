@@ -73,7 +73,7 @@ api.mount('SearchUsers').at('/users')
 api.listen(3000);
 ```
 
-See [Usage with Express](/#) and read [Getting Started](/#) to see all available options.
+See [Usage with Express](#usage-with-express) and read [Getting Started](#getting-started) to see all available options.
 
 ## External GraphQL API
 When dealing with a publicly exposed GraphQL server that implements users and priveleges, the main benefit GraphQL Rest Client provides is caching. While implementing individual caches at a content-level with push-expiration in the GraphQL server is optimal, building these systems is laborous and isn't always prioritized in an MVP product. GraphQL Rest Client allows you to expose a GraphQL query as a REST endpoing with built in cache management that is compatible with all CDNs and cache management layers (e.g. CloudFlare, Akamai, Varnish, etc).
@@ -126,9 +126,18 @@ query GetFirstUser {
     lastName
   }
 }
+
+# THIS
+query GetUser($id: ID!) {
+  getUser(id: $id) {
+    id
+    firstName
+    lastName
+  }
+}
 ```
 
-Once you have your schema and your endpoint, instantiation is straight-forward:
+Once you have your schema and your endpoint, usage is straight-forward:
 
 ```js
 import GraphQLRestRouter from 'graphql-rest-router';
@@ -137,6 +146,11 @@ const schema = fs.readFile(`${__dirname}/schema.gql`);
 const endpoint = 'http://mygraphqlserver.com:9000';
 
 const api = new GraphQLRestRouter(endpoint, schema);
+
+api.mount('GetFirstUser').at('/users/first');
+api.mount('GetUser').at('/users/:id');
+
+api.listen(3000);
 ```
 
 ### Creating Endpoints
@@ -152,7 +166,7 @@ api.mount('OperationName'); // Mounts "query OperationName" as "GET /OperationNa
 By default, mounted queries are GET requests. If you'd like to change that you may specify any http method using `.as()` on a route.
 
 Example:
-```
+```js
 const api = new GraphQLRestRouter(endpoint, schema);
 
 api.mount('GetUserById');           // GET /GetUserById

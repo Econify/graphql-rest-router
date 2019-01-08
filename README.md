@@ -147,7 +147,7 @@ If the server that you are running GraphQL Rest Router on requires a proxy to co
 ### Advanced Configuration of GraphQL Rest Router
 GraphQL Rest Router takes an optional third parameter during initialization that allows you to control default cache, headers, authentication and proxies
 
-```
+```js
 const options = {
   defaultCacheTimeInMs: 3000,
 };
@@ -156,11 +156,20 @@ new GraphQLRestRouter(endpoint, schema, options);
 ```
 
 A list of options and their default values is below:
-**TODO TABLE HERE**
+
+| Property | Type | Default | Description |
+| --- | --- | --- | --- |
+| defaultCacheTimeInMs | number | 0 | If a cache engine has been provided use this as a default value for all routes and endpoints. If a route level cache time has been provided this value will be ignored |
+| defaultTimeoutInMs | number | 10000 | The amount of time to allow for a request to the GraphQL to wait before timing out an endpoint |
+| autoDiscoverEndpoints | boolean | false | When set to true, GQL Rest Router will scan the provided client schema you provide and automatically mount an endpoint for each operation name / named query |
+| optimizeQueryRequest | boolean | false | (BETA) When set to true, GQL Rest Router will split up the provided schema into the smallest fragment necessary to complete each request to the GraphQL server as opposed to sending the originally provided schema with each request|
+| headers | object | {} | Any headers provided here will be sent with each request to GraphQL. If headers are also set at the route level, they will be combined with these headers (Route Headers take priority over Global Headers) |
+| passThroughHeaders | array<string> | [] | An array of strings that indicate which headers to pass through from the request to GraphQL Rest Router to the GraphQL Server. (Example: ['x-context-jwt']) |
+| auth | [AxiosBasicCredentials](https://github.com/axios/axios/blob/master/index.d.ts#L9-L12) | null | If the GraphQL server is protected with basic auth provide the basic auth credentials here to allow GQL Rest Router to connect. (Example: { username: 'pesto', password: 'foobar' } |
+| proxy | [AxiosProxyConfig](https://github.com/axios/axios/blob/master/index.d.ts#L14-L22) | null | If a proxy is required to communicate with your GraphQL server from the server that GQL Rest Router is running on, provide it here. |
+| cacheEngine | ICacheEngine | null | Either a cache engine that [ships default](#Caching) with GQL Rest Router or adheres to the [ICacheEngine interface](#Custom-Cache-Engine) |
 
 ### Creating Endpoints
-
-### GET / POST
 
 ## Caching
 GraphQL Rest Router ships with two cache interfaces stock and supports any number of custom or third party caching interfaces as long as they adhere to `ICacheInterface`
@@ -186,6 +195,11 @@ api.mount('GetUser', { cacheTimeInMs: 500 });
 
 ### Redis Cache
 As of the time of this writing, a REDIS interface for GQL Rest Router is not yet available. Feel free to submit a PR.
+
+### Custom Cache Engine
+If you have a unique cache situation, or use a cache that does not ship by default with GQL Rest Router, you may implement a custom cache as long as it adheres to the ICacheEngine interface.
+
+Simply said, provide an object that contains `get` and `set` functions. See `InMemoryCache.ts` as an example.
 
 ## Swagger / Open API
 As GraphQL Rest Router exposes your API with new routes that aren't covered by GraphQL's internal documentation or introspection queries, GraphQL Rest Router ships with support for Swagger (Open Api V2), Open API (V3) and API Blueprint (planned). When mounting a documentation on GraphQL Rest Router, it will automatically inspect all queries in the schema you provided and run an introspection query on your GraphQL server to dynamically assemble and document the types / endpoints.
@@ -227,8 +241,6 @@ api.mount(swaggerDocumentation).at('/docs/swagger');
 ### API Blueprint
 Planned for V1 but not available in Alpha
 
-## Custom Routes
-
 ## Usage with Web Frameworks
 Currently GQL Rest Router only supports Express out of the box. Please submit a PR or an Issue if you would like to see GQL Rest Router support additional frameworks.
 
@@ -258,7 +270,7 @@ app.listen(3000);
 ```
 
 ### Usage with KOA
-As of the time of this writing, a KOA extension for GQL Rest Router is not yet available. Feel free to submit a PR.
+As of the time of this writing, a KOA extension for GQL Rest Router is not available. Feel free to submit a PR.
 
 ### Code Examples
 See the [examples folder](/examples) in this repo for code examples.

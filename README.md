@@ -141,11 +141,104 @@ const endpoint = 'http://mygraphqlserver.com:9000';
 const api = new GraphQLRestRouter(endpoint, schema);
 ```
 
+### Creating Endpoints
+Once GraphQL Rest Router has been configured setting up endpoints to proxy queries through is simple. Make sure that the schema you've provided is utilizing [Operation Names](https://graphql.org/learn/queries/#operation-name) and `mount(OperationName)` to have GQL Rest Router automatically scan your schema for the desired operation and create a RESTful endpoint for it. If you attempt to mount a non-named query or a query that does not exist within your provided schema, GraphQL Rest Router will throw an exception.
+
+```js
+const api = new GraphQLRestRouter(endpoint, schema);
+
+api.mount('OperationName'); // Mounts "query OperationName" as "GET /OperationName"
+```
+
+#### GET / POST
+By default, mounted queries are GET requests. If you'd like to change that you may specify any http method using `.as()` on a route.
+
+Example:
+```
+const api = new GraphQLRestRouter(endpoint, schema);
+
+api.mount('GetUserById');           // GET /GetUserById
+api.mount('UpdateUser').as('put');  // PUT /UpdateUser
+api.mount('CreateUser').as('post'); // POST /CreateUser
+```
+
+#### Variables
+GraphQL Rest Router will read your provided schema to determine which variables are required and optional. If you are unsure how to create a named operation with variables, the [official GraphQL documentation](https://graphql.org/learn/queries/#variables) has examples. When mounted as a GET endpoint, the variables will be expected as query parameters, while all other methods will check the body for the required variables.
+
+In order to reduce unnecessary load on the GraphQL server, GQL Rest Router validates the variables you've provided before sending a request to the GraphQL server.
+
+Example Schema:
+```gql
+# If GetUserById is mounted:
+#
+# - A GET request to /GetUserById will require you to pass in a query parameter of id or it will error.
+#
+#   Example:
+#     URL: /GetUserById?id=1
+#     Method: GET
+#
+# - A POST request to /GetUserByID will require you to pass in a body that conatins a JSON object with the key id.
+#
+#   Example:
+#     Url: /GetUserById
+#     Method: POST
+#     Headers: { Content-Type: application/json }
+#     Body: { "id": 1 }
+#
+query GetUserById($id: Int!) {
+  getUserById(id: $id) {
+    firstName
+    lastName
+  }
+}
+
+# If SearchUsers is mounted:
+#
+# - A GET request to /SearchUsers will require you to pass in a query parameter of searchTerm or it will error. Optionally you #   may pass in page and resultsPerPage as well (/SearchUsers?searchTerm=pesto&page=1&resultsPerPage=10)
+#
+#   Example:
+#     URL: /SearchUsers?id=1
+#     Method: GET
+#
+# - A POST request to /SearchUsers will require you to pass in a body that conatins a JSON object with the key searchTerm and #   the optional parameters of page and resultsPerPage.
+#
+#   Example:
+#     Url: /GetUserById
+#     Method: POST
+#     Headers: { Content-Type: application/json }
+#     Body: { "searchTerm": "pesto", page: 1 }
+#
+query SearchUsers($page: Int = 1, $resultsPerPage: Int, $searchTerm: String!) {
+  searchUsers(resultsPerPage: $resultsPerPage, page: $page, query: $searchTerm) {
+    email
+    firstName
+    lastName
+  }
+}
+`;
+```
+
+#### Custom Paths
+If no path is provided to a mounted route, it will be made available exactly as it is type in the operation name:
+```js
+api.mount('GetUserById'); // Made available at /GetUserById
+```
+
+It is possible to change/customize this mounting path by using `.at(pathname)` on a route.
+```js
+api.mount('GetUserById').at('/user'); // A call to '/user?id=42' will execute a 'GetUserById' operation on your GQL Server with an id of 42
+```
+
+It is also possible to describe a required variable in the path using a syntax similar to that of express routes
+```js
+api.mount('GetUserById').at('/user/:id'); // A call to /user/42 will execute a 'GetUserById'operation on your GQL server with an id of 42
+```
+
 ### Proxies and Authentication
-If the server that you are running GraphQL Rest Router on requires a proxy to connect to the GraphQL server or credentials to connect, you may pass them directly into GQL Rest Router during instantiation or on a per route basis to limit them to specific routes.
+If the server that you are running GraphQL Rest Router on requires a proxy to connect to the GraphQL server or credentials to connect, you may pass them directly into GQL Rest Router during instantiation or on a per route basis to limit them to specific routes. See [Advanced Configuration of GraphQL Rest Router](#Advanced-Configuration-of-GraphQL-Rest-Router) for implementation
 
 ### Advanced Configuration of GraphQL Rest Router
-GraphQL Rest Router takes an optional third parameter during initialization that allows you to control default cache, headers, authentication and proxies
+GraphQL Rest Router takes an optional third parameter during initialization that allows you to control default cache, headers, authentication and proxies.
 
 ```js
 const options = {
@@ -168,8 +261,6 @@ A list of options and their default values is below:
 | auth | [AxiosBasicCredentials](https://github.com/axios/axios/blob/master/index.d.ts#L9-L12) | null | If the GraphQL server is protected with basic auth provide the basic auth credentials here to allow GQL Rest Router to connect. (Example: { username: 'pesto', password: 'foobar' } |
 | proxy | [AxiosProxyConfig](https://github.com/axios/axios/blob/master/index.d.ts#L14-L22) | null | If a proxy is required to communicate with your GraphQL server from the server that GQL Rest Router is running on, provide it here. |
 | cacheEngine | ICacheEngine | null | Either a cache engine that [ships default](#Caching) with GQL Rest Router or adheres to the [ICacheEngine interface](#Custom-Cache-Engine) |
-
-### Creating Endpoints
 
 ## Caching
 GraphQL Rest Router ships with two cache interfaces stock and supports any number of custom or third party caching interfaces as long as they adhere to `ICacheInterface`

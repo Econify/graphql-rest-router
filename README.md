@@ -36,7 +36,7 @@ api.listen(3000, () => {
   - [Examples](#code-examples)
 
 # Overview
-GraphQL has gained addoption as a replacement to the conventional REST API and for good reason. Development Time/Time to Market are signficantly shortened when no longer requiring every application to build and maintain its own API.
+GraphQL has gained adoption as a replacement to the conventional REST API and for good reason. Development Time/Time to Market are signficantly shortened when no longer requiring every application to build and maintain its own API.
 
 ## Internal GraphQL API
 While GraphQL has gained traction recently, the majority of GraphQL endpoints are used internally and not distributed or endorsed for public use. Items such as authentication, permissions, priveleges and sometimes even performance on certain keys are not seen as primary concerns as the API is deemed "internal". Because of this, any exposure of your GraphQL server to the public internet exposes you to risk (e.g. DDOS by allowing unknown users to create their own non-performant queries, accidental exposure of sensitive data, etc).
@@ -76,7 +76,7 @@ api.listen(3000);
 See [Usage with Express](#usage-with-express) and read [Getting Started](#getting-started) to see all available options.
 
 ## External GraphQL API
-When dealing with a publicly exposed GraphQL server that implements users and priveleges, the main benefit GraphQL Rest Client provides is caching. While implementing individual caches at a content-level with push-expiration in the GraphQL server is optimal, building these systems is laborous and isn't always prioritized in an MVP product. GraphQL Rest Client allows you to expose a GraphQL query as a REST endpoing with built in cache management that is compatible with all CDNs and cache management layers (e.g. CloudFlare, Akamai, Varnish, etc).
+When dealing with a publicly exposed GraphQL server that implements users and priveleges, the main benefit GraphQL Rest Client provides is caching. While implementing individual caches at a content-level with push-expiration in the GraphQL server is optimal, building these systems is laborous and isn't always prioritized in an MVP product. GraphQL Rest Client allows you to expose a GraphQL query as a REST endpoint with built-in cache management that is compatible with all CDNs and cache management layers (e.g. CloudFlare, Akamai, Varnish, etc).
 
 One line of GraphQL Rest Router code allows you to take
 ```gql
@@ -272,17 +272,16 @@ A list of options and their default values is below:
 | passThroughHeaders | array<string> | [] | An array of strings that indicate which headers to pass through from the request to GraphQL Rest Router to the GraphQL Server. (Example: ['x-context-jwt']) |
 | auth | [AxiosBasicCredentials](https://github.com/axios/axios/blob/master/index.d.ts#L9-L12) | null | If the GraphQL server is protected with basic auth provide the basic auth credentials here to allow GQL Rest Router to connect. (Example: { username: 'pesto', password: 'foobar' } |
 | proxy | [AxiosProxyConfig](https://github.com/axios/axios/blob/master/index.d.ts#L14-L22) | null | If a proxy is required to communicate with your GraphQL server from the server that GQL Rest Router is running on, provide it here. |
-| cacheEngine | ICacheEngine | null | Either a cache engine that [ships default](#Caching) with GQL Rest Router or adheres to the [ICacheEngine interface](#Custom-Cache-Engine) |
+| cacheEngine | [ICacheEngine](https://github.com/Econify/graphql-rest-router/blob/master/index.d.ts#L81-L84) | null | Either a cache engine that [ships default](#Caching) with GQL Rest Router or adheres to the [ICacheEngine interface](#Custom-Cache-Engine) |
 
 ## Caching
-GraphQL Rest Router ships with two cache interfaces stock and supports any number of custom or third party caching interfaces as long as they adhere to `ICacheInterface`
+GraphQL Rest Router ships with two cache interfaces stock and supports any number of custom or third party caching interfaces as long as they adhere to [ICacheEngine](https://github.com/Econify/graphql-rest-router/blob/master/index.d.ts#L81-L84)
 
 ### In Memory Cache
 InMemoryCache stores your cached route data on your server in memory. This can be used in development or with low TTLs in order to prevent a [thundering herd](https://en.wikipedia.org/wiki/Thundering_herd_problem) however it is strongly discouraged to use this in production. In Memory caches have the ability to deplete your system's resources and take down your instance of GraphQLRestRouter.
 
 ```js
-import GraphQLRestRouter from 'graphql-rest-router';
-import InMemoryCache from 'graphql-rest-router/InMemoryCache';
+import GraphQLRestRouter, { InMemoryCache } from 'graphql-rest-router';
 
 const api = new GraphQLRestRouter('http://localhost:1227', schema, {
   cacheEngine: new InMemoryCache(),
@@ -309,7 +308,7 @@ As GraphQL Rest Router exposes your API with new routes that aren't covered by G
 
 ### Open API (Preferred)
 ```js
-const OpenApi = require('graphql-rest-router/OpenApi');
+const { OpenApi } = require('graphql-rest-router');
 
 const documentation = new OpenApi.V3({
   title: 'My REST API', // REQUIRED!
@@ -326,7 +325,7 @@ api.mount(documentation).at('/docs/openapi');
 
 ### Swagger
 ```js
-const OpenApi = require('graphql-rest-router/OpenApi');
+const { OpenApi } = require('graphql-rest-router');
 
 const swaggerDocumentation = new OpenApi.V2({
   title: 'My REST API', // REQUIRED!

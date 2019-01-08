@@ -20,7 +20,7 @@ api.listen(3000, () => {
 });
 ```
 
-__Table of Contents__
+## Table of Contents
 - [Overview / Introduction](/#)
   - [Internal GraphQL Usage](/#)
   - [External GraphQL Usage](/#)

@@ -41,6 +41,10 @@ export interface IRouteOptions {
   defaultVariables?: {};
 }
 
+export interface IOperationVariableMap {
+  [variableName: string]: IOperationVariable;
+}
+
 export interface IOperationVariable {
   name: string;
   required: boolean;

@@ -50,9 +50,7 @@ function buildIntrospectionQuery(variables: string[]): string {
 function getAllUsedVariables(routes: Route[]): string[] {
   const variables: string[] = ([] as string[]).concat(
     ...routes.map(
-      route => route.operationVariables.map(
-        variable => variable.type
-      )
+      route => Object.values(route.operationVariables).map(variable => variable.type)
     )
   );
 

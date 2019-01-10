@@ -1,6 +1,6 @@
 import {
   IMountableItem, IConstructorRouteOptions, IRouteOptions,
-  IOperationVariable, IResponse,
+  IOperationVariableMap, IOperationVariable, IResponse,
 }  from '.';
 
 import { IncomingHttpHeaders } from 'http';
@@ -42,12 +42,40 @@ function cleanPath(path: string): string {
   return `/${path}`;
 }
 
+
+// NOTE:
+// Consider moving the introspection of the graphql query into the routes so that
+// we know for certain which variables are INPUT_VARIABLES and which are enums / strings.
+//
+// This attempts to typecast all unknown types to JSON but the try catch deoptimizes the parsing of the JSON
+// and may affect performance.
+function attemptJSONParse(variable: string): any {
+  try {
+    return JSON.parse(variable);
+  } catch (e) {
+    return variable;
+  }
+}
+
+function typecastVariable(variable: string, variableDefinition: IOperationVariable): any {
+  switch (variableDefinition.type) {
+    case 'Int':
+      return parseInt(variable, 10);
+    case 'Boolean':
+      return Boolean(variable);
+    case 'String':
+      return variable;
+    default:
+      return attemptJSONParse(variable);
+  }
+}
+
 export default class Route implements IMountableItem {
   public path!: string;
   public httpMethod: string = 'get';
 
   public passThroughHeaders: string[] = [];
-  public operationVariables!: IOperationVariable[];
+  public operationVariables!: IOperationVariableMap;
   public operationName!: string;
 
   // TODO:
@@ -128,16 +156,24 @@ export default class Route implements IMountableItem {
     return this;
   }
 
-  private getOperationVariables(operation: any): IOperationVariable[] {
-    return operation.variableDefinitions.map(
-      (node: any): IOperationVariable => ({
-        name: node.variable.name.value,
-        required: node.type.kind === 'NonNullType',
-        type: translateVariableType(node),
-        array: isVariableArray(node), 
-        defaultValue: (node.defaultValue || {}).value,
-      })
+  private getOperationVariables(operation: any): IOperationVariableMap {
+    const variableMap: IOperationVariableMap = {};
+
+    operation.variableDefinitions.forEach(
+      (node: any): void => {
+        const variable: IOperationVariable = {
+          name: node.variable.name.value,
+          required: node.type.kind === 'NonNullType',
+          type: translateVariableType(node),
+          array: isVariableArray(node), 
+          defaultValue: (node.defaultValue || {}).value,
+        };
+
+        variableMap[variable.name] = variable;
+      }
     );
+
+    return variableMap;
   }
 
   private setOperationName(operationName: string): void {
@@ -189,7 +225,7 @@ export default class Route implements IMountableItem {
   }
 
   private get requiredVariables(): string[] {
-    return this.operationVariables
+    return Object.values(this.operationVariables)
       .filter(
         ({ required, defaultValue }) => required && !defaultValue
       )
@@ -227,11 +263,33 @@ export default class Route implements IMountableItem {
       .filter(requiredVariable => !variablesAsKeys.includes(requiredVariable));
   }
 
+  // When an encoded value is passed in, it is decoded automatically but will always
+  // be a string.
+  //
+  // This method will iterate through all variables, check their definition type from the spec
+  // and typecast them
+  private typecastVariables(variables: { [key: string]: string }): { [key: string]: any } {
+    const parsedVariables: { [key: string]: any }  = {};
+
+    Object.entries(variables).forEach(
+      ([variableName, value]) => {
+        const variableDefinition = this.operationVariables[variableName];
+
+        parsedVariables[variableName] = typecastVariable(value, variableDefinition);
+      }
+    );
+
+    return parsedVariables;
+  }
+
   asExpressRoute() {
     return async (req: express.Request, res: express.Response) => {
       const { query, params, body } = req;
       
-      const providedVariables = { ...query, ...params, ...body };
+      const parsedQueryVariables = this.typecastVariables(query);
+      const parsedPathVariables = this.typecastVariables(params);
+
+      const providedVariables = { ...parsedQueryVariables, ...parsedPathVariables, ...body };
 
       // Assemble variables from query, path and default values
       const assembledVariables = this.assembleVariables(providedVariables);
@@ -309,7 +367,7 @@ export default class Route implements IMountableItem {
 
     const pathVariableNames = matches.map(match => match.substr(1));
 
-    return this.operationVariables.filter(
+    return Object.values(this.operationVariables).filter(
       ({ name }) => pathVariableNames.includes(name)
     );
   }
@@ -317,7 +375,7 @@ export default class Route implements IMountableItem {
   get nonPathVariables(): IOperationVariable[] {
     const pathVariableNames = this.pathVariables.map(({ name }) => name);
 
-    return this.operationVariables
+    return Object.values(this.operationVariables)
       .filter(
         ({ name }) => !pathVariableNames.includes(name)
       );

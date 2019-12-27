@@ -276,7 +276,10 @@ export default class Route implements IMountableItem {
         const variableDefinition = this.operationVariables[variableName];
         const typecastValue = typecastVariable(value, variableDefinition);
 
-        parsedVariables[variableName] = encoder ? encode(typecastValue) : typecastValue;
+        // We only want to encode strings not integer values otherwise integers
+        // become strings
+        const shouldUseEncoder = encoder && typeof typecastValue === 'string';
+        parsedVariables[variableName] = shouldUseEncoder ? encode(typecastValue) : typecastValue;
       }
     );
 

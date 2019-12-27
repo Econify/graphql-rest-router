@@ -268,14 +268,15 @@ export default class Route implements IMountableItem {
   //
   // This method will iterate through all variables, check their definition type from the spec
   // and typecast them
-  private typecastVariables(variables: { [key: string]: string }): { [key: string]: any } {
+  private typecastVariables(variables: { [key: string]: string }, encoder?: Function): { [key: string]: any } {
     const parsedVariables: { [key: string]: any }  = {};
 
     Object.entries(variables).forEach(
       ([variableName, value]) => {
         const variableDefinition = this.operationVariables[variableName];
+        const typecastValue = typecastVariable(value, variableDefinition);
 
-        parsedVariables[variableName] = typecastVariable(value, variableDefinition);
+        parsedVariables[variableName] = encoder ? encode(typecastValue) : typecastValue;
       }
     );
 
@@ -287,7 +288,7 @@ export default class Route implements IMountableItem {
       const { query, params, body } = req;
       
       const parsedQueryVariables = this.typecastVariables(query);
-      const parsedPathVariables = this.typecastVariables(params);
+      const parsedPathVariables = this.typecastVariables(params, encodeURI);
 
       const providedVariables = { ...parsedQueryVariables, ...parsedPathVariables, ...body };
 

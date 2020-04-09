@@ -5,7 +5,7 @@ import {
 
 import { IncomingHttpHeaders } from 'http';
 import { DocumentNode, parse, print, getOperationAST } from 'graphql';
-import { AxiosTransformer, AxiosInstance, AxiosRequestConfig } from 'axios';
+import axios, { AxiosTransformer, AxiosInstance, AxiosRequestConfig } from 'axios';
 import * as express from 'express';
 
 const PATH_VARIABLES_REGEX = /:([A-Za-z]+)/g
@@ -70,6 +70,19 @@ function typecastVariable(variable: string, variableDefinition: IOperationVariab
   }
 }
 
+function getDefaultTransformResponse(): AxiosTransformer[] {
+  const { transformResponse } = axios.defaults;
+ 
+  if (!transformResponse) {
+    return [];
+  } else if (Array.isArray(transformResponse)) {
+    return transformResponse;
+  } else {
+    return [transformResponse];
+  }
+}
+
+
 export default class Route implements IMountableItem {
   public path!: string;
   public httpMethod: string = 'get';
@@ -113,6 +126,7 @@ export default class Route implements IMountableItem {
 
     this.schema = typeof schema === 'string' ? parse(schema) : schema;
     this.axios = configuration.axios;
+    this.transformResponseFn = getDefaultTransformResponse();
 
     this.setOperationName(operationName);
 

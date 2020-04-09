@@ -88,9 +88,10 @@ describe('Router', () => {
       // Hijack the axios request initiated by private#makeRequest
       nock(endpoint)
         .post('/')
-        .reply(200,
+        .reply(
+          200,
           "{\"data\":{\"users\":[{\"id\":1,\"name\":\"Charles Barkley\"}]}}"
-        )
+        );
       
       router.mount(operationName)
         .transformResponse(

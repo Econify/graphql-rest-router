@@ -71,7 +71,7 @@ describe('Router', () => {
       });
     });
   });
-  
+
   describe('#transformResponse', () => {
     const operationName = 'GetUserById';
     let router;
@@ -91,6 +91,7 @@ describe('Router', () => {
         .reply(200,
           "{\"data\":{\"users\":[{\"id\":1,\"name\":\"Charles Barkley\"}]}}"
         )
+      
       router.mount(operationName)
         .transformResponse(
           (response) => {

@@ -38,7 +38,7 @@
     "typescript": "^3.2.2"
   },
   "dependencies": {
-    "axios": "^0.18.0",
+    "axios": "^0.18.1",
     "express": "^4.16.4",
     "graphql": "^14.0.2"
   }

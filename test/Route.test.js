@@ -1,6 +1,7 @@
 const { assert } = require('chai');
 const Route = require('../Route').default;
 const fs = require('fs');
+const axios = require('axios');
 
 describe('Route', () => {
   const graphQLEndpoint = 'http://example.com';
@@ -124,6 +125,24 @@ describe('Route', () => {
       assert.equal(route.path, operationName);
     });
   });
+
+  describe('#transformResponse', () => {
+    const operationName = 'GetUserById';
+    let route;
+
+    beforeEach(() => {
+      route = new Route({ schema, operationName, graphQLEndpoint });
+    });
+
+    it('should include the default axios transformResponse', () => {
+      assert.equal(route.transformResponseFn.length, 1)
+    });
+
+    it('should append additional transforms when called', () => {
+      route.transformResponse( (data) => 'testing transform' );
+      assert.equal(route.transformResponseFn.length, 2);
+    });
+  })
 
   describe('#areVariablesValid', () => {
   });

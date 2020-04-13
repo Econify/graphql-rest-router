@@ -142,6 +142,14 @@ describe('Route', () => {
       route.transformResponse( (data) => 'testing transform' );
       assert.equal(route.transformResponseFn.length, 2);
     });
+    
+    it('should return data as JSON if response is stringified JSON', async () => {
+      const stringifiedJSON = "{\"data\":{\"users\":[{\"id\":1,\"name\":\"Charles Barkley\"}]}}";
+      const transformResponse = route.transformResponseFn[0];
+      const data = await transformResponse(stringifiedJSON);
+      
+      assert.strictEqual(typeof data, 'object');
+    });
   })
 
   describe('#areVariablesValid', () => {

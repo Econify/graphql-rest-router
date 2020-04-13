@@ -70,19 +70,6 @@ function typecastVariable(variable: string, variableDefinition: IOperationVariab
   }
 }
 
-function getDefaultTransformResponse(): AxiosTransformer[] {
-  const { transformResponse } = axios.defaults;
- 
-  if (!transformResponse) {
-    return [];
-  } else if (Array.isArray(transformResponse)) {
-    return transformResponse;
-  } else {
-    return [transformResponse];
-  }
-}
-
-
 export default class Route implements IMountableItem {
   public path!: string;
   public httpMethod: string = 'get';
@@ -103,7 +90,7 @@ export default class Route implements IMountableItem {
   private schema!: DocumentNode;
 
   private transformRequestFn: AxiosTransformer[] = [];
-  private transformResponseFn: AxiosTransformer[] = [];
+  private transformResponseFn!: AxiosTransformer[];
 
   private staticVariables: {} = {};
   private defaultVariables: {} = {};
@@ -126,7 +113,7 @@ export default class Route implements IMountableItem {
 
     this.schema = typeof schema === 'string' ? parse(schema) : schema;
     this.axios = configuration.axios;
-    this.transformResponseFn = getDefaultTransformResponse();
+    this.transformResponseFn = axios.defaults.transformResponse as AxiosTransformer[];
 
     this.setOperationName(operationName);
 

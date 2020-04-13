@@ -72,40 +72,4 @@ describe('Router', () => {
     });
   });
 
-  describe('#transformResponse', () => {
-    const operationName = 'GetUserById';
-    let router;
-
-    beforeEach(() => {
-      router = new Router(endpoint, schema);
-    });
-
-    afterEach(() => {
-      nock.cleanAll();
-    })
-
-    it('should return data as JSON to the transformer function', (done) => {
-      // Hijack the axios request initiated by private#makeRequest
-      nock(endpoint)
-        .post('/')
-        .reply(
-          200,
-          "{\"data\":{\"users\":[{\"id\":1,\"name\":\"Charles Barkley\"}]}}"
-        );
-      
-      router.mount(operationName)
-        .transformResponse(
-          (response) => {
-            console.log('response type: ', typeof response);
-            console.log('response: ', response);
-            assert.strictEqual(typeof response, 'object');
-
-            done();
-          }
-        )
-        .makeRequest();
-
-    });
-  })
-
 });

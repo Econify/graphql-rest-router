@@ -111,9 +111,11 @@ export default class Route implements IMountableItem {
       throw new Error('A valid schema is required to initialize a Route');
     }
 
+    const { transformResponse } = axios.defaults;
+
     this.schema = typeof schema === 'string' ? parse(schema) : schema;
     this.axios = configuration.axios;
-    this.transformResponseFn = axios.defaults.transformResponse as AxiosTransformer[];
+    this.transformResponseFn = transformResponse as AxiosTransformer[];
 
     this.setOperationName(operationName);
 

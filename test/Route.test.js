@@ -1,6 +1,7 @@
 const { assert } = require('chai');
 const Route = require('../Route').default;
 const fs = require('fs');
+const axios = require('axios');
 
 describe('Route', () => {
   const graphQLEndpoint = 'http://example.com';
@@ -124,6 +125,32 @@ describe('Route', () => {
       assert.equal(route.path, operationName);
     });
   });
+
+  describe('#transformResponse', () => {
+    const operationName = 'GetUserById';
+    let route;
+
+    beforeEach(() => {
+      route = new Route({ schema, operationName, graphQLEndpoint });
+    });
+
+    it('should include the default axios transformResponse', () => {
+      assert.equal(route.transformResponseFn.length, 1)
+    });
+
+    it('should append additional transforms when called', () => {
+      route.transformResponse( (data) => 'testing transform' );
+      assert.equal(route.transformResponseFn.length, 2);
+    });
+    
+    it('should return data as JSON if response is stringified JSON', async () => {
+      const stringifiedJSON = "{\"data\":{\"users\":[{\"id\":1,\"name\":\"Charles Barkley\"}]}}";
+      const transformResponse = route.transformResponseFn[0];
+      const data = await transformResponse(stringifiedJSON);
+      
+      assert.strictEqual(typeof data, 'object');
+    });
+  })
 
   describe('#areVariablesValid', () => {
   });

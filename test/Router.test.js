@@ -7,6 +7,7 @@ const Route = require('../Route').default;
 const { version } = require('../package.json');
 
 const fs = require('fs');
+const nock = require('nock')
 
 const schema = fs.readFileSync(`${__dirname}/schema.example.graphql`, 'utf8');
 const endpoint = 'http://foobar.com';

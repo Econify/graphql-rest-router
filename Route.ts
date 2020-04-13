@@ -5,7 +5,7 @@ import {
 
 import { IncomingHttpHeaders } from 'http';
 import { DocumentNode, parse, print, getOperationAST } from 'graphql';
-import { AxiosTransformer, AxiosInstance, AxiosRequestConfig } from 'axios';
+import axios, { AxiosTransformer, AxiosInstance, AxiosRequestConfig } from 'axios';
 import * as express from 'express';
 
 const PATH_VARIABLES_REGEX = /:([A-Za-z]+)/g
@@ -90,7 +90,7 @@ export default class Route implements IMountableItem {
   private schema!: DocumentNode;
 
   private transformRequestFn: AxiosTransformer[] = [];
-  private transformResponseFn: AxiosTransformer[] = [];
+  private transformResponseFn!: AxiosTransformer[];
 
   private staticVariables: {} = {};
   private defaultVariables: {} = {};
@@ -111,8 +111,11 @@ export default class Route implements IMountableItem {
       throw new Error('A valid schema is required to initialize a Route');
     }
 
+    const { transformResponse } = axios.defaults;
+
     this.schema = typeof schema === 'string' ? parse(schema) : schema;
     this.axios = configuration.axios;
+    this.transformResponseFn = transformResponse as AxiosTransformer[];
 
     this.setOperationName(operationName);
 

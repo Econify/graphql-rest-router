@@ -17,7 +17,7 @@ describe('Route', () => {
         });
 
         it('should set path to the operation name', () => {
-          assert.equal(route.path, operationName);
+          assert.equal(route.path, `/${operationName}`);
         });
       });
 
@@ -103,13 +103,15 @@ describe('Route', () => {
       });
 
       it('should set operation variables', () => {
-        const operationVariables = [
-          {
+        const operationVariables = {
+          id: {
             name: 'id',
             required: true,
+            type: 'Int',
+            array: false,
             defaultValue: undefined,
           }
-        ];
+        };
 
         assert.deepEqual(route.operationVariables, operationVariables);
       });
@@ -121,7 +123,7 @@ describe('Route', () => {
       const operationName = 'GetUserById';
 
       const route = new Route({ graphQLEndpoint, schema, operationName });
-      assert.equal(route.path, operationName);
+      assert.equal(route.path, `/${operationName}`);
     });
   });
 

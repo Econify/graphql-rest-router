@@ -1,7 +1,7 @@
 import {
   IMountableItem, IConstructorRouteOptions, IRouteOptions,
   IOperationVariableMap, IOperationVariable, IResponse,
-}  from '.';
+}  from './types';
 
 import { IncomingHttpHeaders } from 'http';
 import { DocumentNode, parse, print, getOperationAST } from 'graphql';
@@ -286,7 +286,7 @@ export default class Route implements IMountableItem {
     return async (req: express.Request, res: express.Response) => {
       const { query, params, body } = req;
       
-      const parsedQueryVariables = this.typecastVariables(query);
+      const parsedQueryVariables = this.typecastVariables(query as any);
       const parsedPathVariables = this.typecastVariables(params);
 
       const providedVariables = { ...parsedQueryVariables, ...parsedPathVariables, ...body };

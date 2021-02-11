@@ -1,4 +1,4 @@
-import { IMountableItem, IOperationVariable, IOpenApiOptions,  } from '.';
+import { IMountableItem, IOperationVariable, IOpenApiOptions,  } from './types';
 import describeRouteVariables from './describeRouteVariables';
 import Router from './Router';
 import Route from './Route';

@@ -1,17 +1,47 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
+    "target": "es2016",
+    "outDir": "build/",
+    "rootDir": "src/",
+    "moduleResolution": "node",
     "module": "commonjs",
+    "importHelpers": true,
+    "inlineSourceMap": true,
+    "strictNullChecks": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitAny": false,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true,
+    "downlevelIteration": true,
+    "allowUnreachableCode": false,
+    "allowJs": false,
     "lib": [
-      "es2017",
+      "dom",
+      "es5",
+      "es6",
+      "es7",
+      "es2017.object",
+      "esnext",
       "esnext.asynciterable"
     ],
-    "strict": true,
-    "esModuleInterop": true,
-    "resolveJsonModule": true
+    "typeRoots": [
+      "./node_modules/@types"
+    ],
+    "types": ["node", "jest"],
+    "baseUrl": "./",
+    "paths": {
+      "src/*": ["./src/*"]
+    }
   },
+  "include": [
+    "**/*.ts",
+    "**/*.graphql",
+    "package.json"
+  ],
   "exclude": [
-    "node_modules",
-    "test"
+    "node_modules/**",
   ]
 }

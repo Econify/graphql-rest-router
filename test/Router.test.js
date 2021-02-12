@@ -1,12 +1,12 @@
+const fs = require('fs');
 const { assert } = require('chai');
 const sinon = require('sinon');
 const { parse } = require('graphql');
 
-const Router = require('../Router').default;
-const Route = require('../Route').default;
+const Router = require('../src/Router').default;
+const Route = require('../src/Route').default;
 const { version } = require('../package.json');
 
-const fs = require('fs');
 
 const schema = fs.readFileSync(`${__dirname}/schema.example.graphql`, 'utf8');
 const endpoint = 'http://foobar.com';

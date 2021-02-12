@@ -2,8 +2,8 @@
   "name": "graphql-rest-router",
   "version": "1.0.0-alpha.12",
   "description": "",
-  "main": "./build/index.js",
-  "types": "./build/types.js",
+  "main": "./build/src/index.js",
+  "types": "./build/src/types.js",
   "files": [
     "*.js",
     "types.js"

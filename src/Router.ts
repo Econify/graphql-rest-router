@@ -9,9 +9,8 @@ import * as express from 'express';
 import * as bodyParser from 'body-parser';
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { parse, DocumentNode, getOperationAST } from 'graphql';
-// import { version } from '../package.json';/
 
-const version = require('./package.json').version;
+const version = require('../package.json').version;
 
 const DEFAULT_CONFIGURATION: IGlobalConfiguration = {
   cacheEngine: undefined,

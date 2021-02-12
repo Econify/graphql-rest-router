@@ -1,5 +1,5 @@
 const { assert } = require('chai');
-const Route = require('../Route').default;
+const Route = require('../src/Route').default;
 const fs = require('fs');
 
 describe('Route', () => {

@@ -103,7 +103,8 @@ export default class Route implements IMountableItem {
 
   private configureRoute(configuration: IConstructorRouteOptions) {
     const { 
-      schema, operationName,
+      schema,
+      operationName,
       ...options
     } = configuration;
 

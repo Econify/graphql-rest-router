@@ -1,9 +1,8 @@
-import express from 'express';
-import Router from './Router';
+import { AxiosBasicCredentials, AxiosProxyConfig, AxiosInstance } from 'axios';
 import { DocumentNode } from 'graphql';
-import axios, {
-  AxiosBasicCredentials, AxiosProxyConfig, AxiosInstance
-} from 'axios';
+import express from 'express';
+
+import Router from './Router';
 
 export interface IGlobalConfiguration {
   cacheEngine?: ICacheEngine;
@@ -11,7 +10,7 @@ export interface IGlobalConfiguration {
   defaultCacheTimeInMs?: number;
   autoDiscoverEndpoints?: boolean;
   optimizeQueryRequest?: boolean;
-  headers?: {};
+  headers?: Record<string, unknown>;
   passThroughHeaders?: string[];
   auth?: AxiosBasicCredentials;
   proxy?: AxiosProxyConfig;
@@ -27,8 +26,8 @@ export interface IConstructorRouteOptions {
 
   passThroughHeaders?: string[];
 
-  staticVariables?: {};
-  defaultVariables?: {};
+  staticVariables?: Record<string, unknown>;
+  defaultVariables?: Record<string, unknown>;
 }
 
 export interface IRouteOptions {
@@ -37,8 +36,8 @@ export interface IRouteOptions {
   method?: string;
   passThroughHeaders?: string[];
 
-  staticVariables?: {};
-  defaultVariables?: {};
+  staticVariables?: Record<string, unknown>;
+  defaultVariables?: Record<string, unknown>;
 }
 
 export interface IOperationVariableMap {
@@ -55,7 +54,7 @@ export interface IOperationVariable {
 
 export interface IResponse {
   statusCode: number;
-  body: {};
+  body: Record<string, unknown>;
 }
 
 export interface IOpenApiOptions {
@@ -77,7 +76,7 @@ export interface IMountableItem {
   asKoaRoute: () => void;
   asMetal: () => void;
 
-  withOptions: (options: any) => this;
+  withOptions: (options: Record<string, unknown>) => this;
 
   onMount?: (router: Router) => this
 }

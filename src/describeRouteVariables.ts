@@ -1,5 +1,6 @@
 import Router from './Router';
 import Route from './Route';
+import { IGlobalConfiguration } from './types';
 
 const TYPE_FRAGMENT = `
   fragment TypeFragment on __Type {
@@ -59,7 +60,7 @@ function getAllUsedVariables(routes: Route[]): string[] {
   return uniqueVariables;
 }
 
-export default async function describeRouteVariables(router: Router): Promise<any> {
+export default async function describeRouteVariables(router: Router): Promise<IGlobalConfiguration | never> {
   const variables = getAllUsedVariables(router.routes);
   const query = buildIntrospectionQuery(variables);
 

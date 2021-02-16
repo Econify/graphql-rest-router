@@ -1,14 +1,14 @@
-import {
-  IMountableItem, IConstructorRouteOptions, IRouteOptions,
-  IOperationVariableMap, IOperationVariable, IResponse,
-}  from './types';
-
 import { IncomingHttpHeaders } from 'http';
 import { DocumentNode, parse, print, getOperationAST } from 'graphql';
 import { AxiosTransformer, AxiosInstance, AxiosRequestConfig } from 'axios';
 import * as express from 'express';
 
-const PATH_VARIABLES_REGEX = /:([A-Za-z]+)/g
+import {
+  IMountableItem, IConstructorRouteOptions, IRouteOptions,
+  IOperationVariableMap, IOperationVariable, IResponse,
+}  from './types';
+
+const PATH_VARIABLES_REGEX = /:([A-Za-z]+)/g;
 
 /*
 enum EHTTPMethod {
@@ -72,7 +72,7 @@ function typecastVariable(variable: string, variableDefinition: IOperationVariab
 
 export default class Route implements IMountableItem {
   public path!: string;
-  public httpMethod: string = 'get';
+  public httpMethod = 'get';
 
   public passThroughHeaders: string[] = [];
   public operationVariables!: IOperationVariableMap;
@@ -84,7 +84,7 @@ export default class Route implements IMountableItem {
   // that changes made after export will not be respected by
   // the export and will only be respected on exports made after
   // the change
-  private configurationIsFrozen: boolean = false;
+  private configurationIsFrozen = false;
 
   private axios!: AxiosInstance;
   private schema!: DocumentNode;
@@ -95,14 +95,14 @@ export default class Route implements IMountableItem {
   private staticVariables: {} = {};
   private defaultVariables: {} = {};
 
-  private cacheTimeInMs: number = 0;
+  private cacheTimeInMs = 0;
 
   constructor(configuration: IConstructorRouteOptions) {
     this.configureRoute(configuration);
   }
 
   private configureRoute(configuration: IConstructorRouteOptions) {
-    const { 
+    const {
       schema,
       operationName,
       ...options
@@ -141,7 +141,7 @@ export default class Route implements IMountableItem {
   whitelistHeaderForPassThrough(header: string): this {
     this.passThroughHeaders.push(header);
 
-    return this
+    return this;
   }
 
   at(path: string): this {
@@ -166,7 +166,7 @@ export default class Route implements IMountableItem {
           name: node.variable.name.value,
           required: node.type.kind === 'NonNullType',
           type: translateVariableType(node),
-          array: isVariableArray(node), 
+          array: isVariableArray(node),
           defaultValue: (node.defaultValue || {}).value,
         };
 
@@ -180,7 +180,7 @@ export default class Route implements IMountableItem {
   private setOperationName(operationName: string): void {
     const operation = getOperationAST(this.schema, operationName);
 
-    if (!Boolean(operation)) {
+    if (!operation) {
       throw new Error(`The named query "${operationName}" does not exist in the Schema provided`);
     }
 
@@ -286,7 +286,7 @@ export default class Route implements IMountableItem {
   asExpressRoute() {
     return async (req: express.Request, res: express.Response) => {
       const { query, params, body } = req;
-      
+
       const parsedQueryVariables = this.typecastVariables(query as any);
       const parsedPathVariables = this.typecastVariables(params);
 
@@ -410,7 +410,7 @@ export default class Route implements IMountableItem {
         };
       }
 
-      if (error.message.indexOf("timeout") >= 0) {
+      if (error.message.indexOf('timeout') >= 0) {
         return <IResponse> {
           statusCode: 504,
           body: {

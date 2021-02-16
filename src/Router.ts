@@ -1,14 +1,10 @@
-import {
-  IGlobalConfiguration,
-  IMountableItem,
-  ICacheEngine,
-  IConstructorRouteOptions,
-} from './types';
-import Route from './Route';
 import * as express from 'express';
 import * as bodyParser from 'body-parser';
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { parse, DocumentNode, getOperationAST } from 'graphql';
+
+import Route from './Route';
+import { IGlobalConfiguration, IMountableItem, IConstructorRouteOptions } from './types';
 
 const version = require('../package.json').version;
 
@@ -93,7 +89,7 @@ export default class Router {
       const { schema, axios } = this;
       const operationName = operationNameOrMountableItem;
 
-      const passThroughHeaders = Boolean(options)
+      const passThroughHeaders = options
         ? [...this.passThroughHeaders, ...options.passThroughHeaders]
         : [...this.passThroughHeaders];
 
@@ -146,7 +142,7 @@ export default class Router {
 
       router[httpMethod](path, routeFn);
     });
-    
+
     return router;
   }
 

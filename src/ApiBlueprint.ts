@@ -1,10 +1,11 @@
-import Router from './Router';
 import express from 'express';
+
+import Router from './Router';
 import { IMountableItem } from './types';
 
 export default class ApiBlueprint implements IMountableItem {
-  public path: string = '/docs/blueprint';
-  public httpMethod: string = 'get';
+  public path = '/docs/blueprint';
+  public httpMethod = 'get';
   protected router: Router;
 
   constructor() {
@@ -22,20 +23,22 @@ export default class ApiBlueprint implements IMountableItem {
 
     return this;
   }
- 
-  withOptions(options: {}): this {
+
+  // This doesn't do anything yet?
+  withOptions(options: Record<string, unknown>): this {
+
     return this;
   }
 
-  asExpressRoute(): (req: express.Request, res: express.Response) => void {
+  asExpressRoute(): ((req: express.Request, res: express.Response) => void) | never {
     throw new Error('Not yet implemented');
   }
 
-  asKoaRoute() {
+  asKoaRoute(): ((req: express.Request, res: express.Response) => void) | never {
     throw new Error('not yet implemented');
   }
 
-  asMetal() {
+  asMetal(): ((req: express.Request, res: express.Response) => void) | never {
     throw new Error('not yet implemented');
   }
 }

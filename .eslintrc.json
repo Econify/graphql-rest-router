@@ -14,7 +14,6 @@
     "import/no-relative-parent-imports": "error",
     "import/no-dynamic-require": "error",
     "import/first": "error",
-    "no-console": "error",
     "no-empty": "error",
     "quotes": ["error", "single"],
     "semi": ["error", "always"],

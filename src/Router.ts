@@ -89,7 +89,7 @@ export default class Router {
       const { schema, axios } = this;
       const operationName = operationNameOrMountableItem;
 
-      const passThroughHeaders = options
+      const passThroughHeaders = Boolean(options)
         ? [...this.passThroughHeaders, ...options.passThroughHeaders]
         : [...this.passThroughHeaders];
 

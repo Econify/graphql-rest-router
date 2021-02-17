@@ -5,17 +5,11 @@
     "rootDir": "src/",
     "moduleResolution": "node",
     "module": "commonjs",
-    "importHelpers": true,
-    "inlineSourceMap": true,
-    "strictNullChecks": true,
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
-    "noImplicitAny": false,
-    "noImplicitReturns": true,
+    "noImplicitAny": true,
     "noImplicitThis": true,
     "allowSyntheticDefaultImports": true,
-    "experimentalDecorators": true,
-    "downlevelIteration": true,
     "allowUnreachableCode": false,
     "allowJs": false,
     "lib": [
@@ -44,5 +38,6 @@
   ],
   "exclude": [
     "node_modules/**",
+    "test"
   ]
 }

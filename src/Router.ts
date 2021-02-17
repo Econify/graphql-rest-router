@@ -1,15 +1,12 @@
-import {
-  IGlobalConfiguration,
-  IMountableItem,
-  ICacheEngine,
-  IConstructorRouteOptions,
-} from '.';
-import Route from './Route';
-import express from 'express';
-import bodyParser from 'body-parser';
+import * as express from 'express';
+import * as bodyParser from 'body-parser';
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { parse, DocumentNode, getOperationAST } from 'graphql';
-import { version } from './package.json';
+
+import Route from './Route';
+import { IGlobalConfiguration, IMountableItem, IConstructorRouteOptions } from './types';
+
+const version = require('../package.json').version;
 
 const DEFAULT_CONFIGURATION: IGlobalConfiguration = {
   cacheEngine: undefined,
@@ -145,7 +142,7 @@ export default class Router {
 
       router[httpMethod](path, routeFn);
     });
-    
+
     return router;
   }
 

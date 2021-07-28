@@ -1,17 +1,17 @@
 {
   "name": "graphql-rest-router",
-  "version": "1.0.0-alpha.12",
+  "version": "1.0.0-alpha.13",
   "description": "",
-  "main": "./src/index.js",
-  "types": "./src/types.js",
+  "main": "./build/src/index.js",
+  "types": "./build/src/types.d.ts",
   "files": [
-    "*.js",
-    "types.js"
+    "*.ts"
   ],
   "scripts": {
     "lint": "eslint . --ext .ts",
     "build": "tsc --build tsconfig.build.json && cp ./package.json ./build/package.json",
-    "prepare": "npm run build",
+    "clean-build": "rm -rf build",
+    "prepare": "npm run clean-build && npm run build",
     "test": "mocha -r ts-node/register ./test/*.test.js"
   },
   "repository": {
@@ -26,9 +26,6 @@
   "homepage": "https://github.com/Econify/graphql-rest-router#readme",
   "devDependencies": {
     "@types/chai": "^4.1.7",
-    "@types/express": "^4.17.1",
-    "@types/graphql": "^14.0.3",
-    "@types/jest": "^26.0.20",
     "@types/mocha": "^5.2.5",
     "@types/node": "^10.12.18",
     "@types/sinon": "^7.0.2",
@@ -44,6 +41,9 @@
     "typescript": "4.0.3"
   },
   "dependencies": {
+    "@types/express": "^4.17.1",
+    "@types/graphql": "^14.0.3",
+    "@types/jest": "^26.0.20",
     "axios": "^0.21.1",
     "express": "^4.17.1",
     "graphql": "^14.0.2",

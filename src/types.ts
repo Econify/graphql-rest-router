@@ -1,8 +1,9 @@
+import Router from './Router';
 import { AxiosBasicCredentials, AxiosProxyConfig, AxiosInstance } from 'axios';
 import { DocumentNode } from 'graphql';
 import express from 'express';
 
-import Router from './Router';
+export default Router;
 
 export interface IGlobalConfiguration {
   cacheEngine?: ICacheEngine;

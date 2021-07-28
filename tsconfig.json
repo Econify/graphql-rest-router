@@ -9,6 +9,8 @@
     "noFallthroughCasesInSwitch": true,
     "noImplicitAny": true,
     "noImplicitThis": true,
+    "declaration": true,
+    "declarationDir": "build/src/",
     "allowSyntheticDefaultImports": true,
     "allowUnreachableCode": false,
     "allowJs": false,

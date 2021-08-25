@@ -1,6 +1,6 @@
 import {
   IMountableItem, IConstructorRouteOptions, IRouteOptions,
-  IOperationVariableMap, IOperationVariable, IResponse,
+  IOperationVariableMap, IOperationVariable, IResponse, ILogger,
 }  from '.';
 
 import { IncomingHttpHeaders } from 'http';
@@ -17,6 +17,15 @@ enum EHTTPMethod {
   PUT = 'put',
 }
 */
+
+// Is there a way that we can expose this enum to the developer?
+// Or just document the corresponding numbers?
+enum LogLevel {
+  ERROR = 0,
+  WARN = 1,
+  INFO = 2,
+  DEBUG = 3,
+}
 
 function isVariableArray(node: any): boolean {
   if (node.type.kind === 'NonNullType') {
@@ -91,10 +100,12 @@ export default class Route implements IMountableItem {
 
   private transformRequestFn: AxiosTransformer[] = [];
   private transformResponseFn: AxiosTransformer[] = [];
+  private logger?: ILogger;
 
   private staticVariables: {} = {};
   private defaultVariables: {} = {};
 
+  private logLevel: LogLevel = LogLevel.ERROR;
   private cacheTimeInMs: number = 0;
 
   constructor(configuration: IConstructorRouteOptions) {
@@ -102,8 +113,8 @@ export default class Route implements IMountableItem {
   }
 
   private configureRoute(configuration: IConstructorRouteOptions) {
-    const { 
-      schema, operationName,
+    const {
+      schema, operationName, logger,
       ...options
     } = configuration;
 
@@ -113,6 +124,7 @@ export default class Route implements IMountableItem {
 
     this.schema = typeof schema === 'string' ? parse(schema) : schema;
     this.axios = configuration.axios;
+    this.logger = logger;
 
     this.setOperationName(operationName);
 
@@ -324,6 +336,12 @@ export default class Route implements IMountableItem {
 
   // areVariablesValid(variables: {}) {}
 
+  setLogLevel(logLevel: LogLevel): this {
+    this.logLevel = logLevel;
+
+    return this;
+  }
+
   transformRequest(fn: AxiosTransformer): this {
     this.transformRequestFn.push(fn);
 
@@ -382,7 +400,11 @@ export default class Route implements IMountableItem {
   }
 
   private async makeRequest(variables: {}, headers: {} = {}): Promise<IResponse> {
-    const { axios, schema, operationName } = this;
+    const { axios, schema, operationName, path } = this;
+
+    if (this.logger && this.logLevel >= LogLevel.INFO) {
+      this.logger.info(`Incoming request: ${path}`)
+    }
 
     const config: AxiosRequestConfig = {
       data: {
@@ -400,8 +422,18 @@ export default class Route implements IMountableItem {
     try {
       const { data, status } = await axios(config);
 
+      if (this.logger && this.logLevel >= LogLevel.ERROR && data.errors && data.errors.length) {
+        data.errors.forEach((error: any) =>
+          this.logger && this.logger.error(`Error in GraphQL response: ${JSON.stringify(error)}`)
+        )
+      }
+
       return <IResponse> { body: data, statusCode: status };
     } catch (error) {
+      if (this.logger && this.logLevel > -1) {
+        this.logger.error(error.stack);
+      }
+
       if (error.response) {
         return <IResponse> {
           body: error.response.data,

@@ -5,8 +5,16 @@ import axios, {
   AxiosBasicCredentials, AxiosProxyConfig, AxiosInstance
 } from 'axios';
 
+export interface ILogger {
+  error: (message: String) => void;
+  warn: (message: String) => void;
+  info: (message: String) => void;
+  debug: (message: String) => void;
+}
+
 export interface IGlobalConfiguration {
   cacheEngine?: ICacheEngine;
+  logger?: ILogger;
   defaultTimeoutInMs?: number;
   defaultCacheTimeInMs?: number;
   autoDiscoverEndpoints?: boolean;
@@ -21,6 +29,7 @@ export interface IConstructorRouteOptions {
   schema: DocumentNode | string; // GraphQL Document Type
   operationName: string;
   axios: AxiosInstance;
+  logger?: ILogger;
   path?: string;
   cacheTimeInMs?: number;
   method?: string;

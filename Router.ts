@@ -13,6 +13,7 @@ import { version } from './package.json';
 
 const DEFAULT_CONFIGURATION: IGlobalConfiguration = {
   cacheEngine: undefined,
+  logger: undefined,
   auth: undefined,
   proxy: undefined,
   defaultTimeoutInMs: 10000,
@@ -89,7 +90,7 @@ export default class Router {
   mount(mountableItem: IMountableItem, options?: any): IMountableItem;
   mount(operationNameOrMountableItem: string | IMountableItem, options?: any): IMountableItem {
     if (typeof operationNameOrMountableItem === 'string') {
-      const { schema, axios } = this;
+      const { schema, axios, options: { logger } } = this;
       const operationName = operationNameOrMountableItem;
 
       const passThroughHeaders = Boolean(options)
@@ -103,6 +104,7 @@ export default class Router {
 
         axios,
         schema,
+        logger,
 
         passThroughHeaders,
       };

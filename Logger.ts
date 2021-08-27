@@ -2,7 +2,7 @@ import { ILogger, LogLevel } from ".";
 
 export default class Logger implements ILogger {
   private loggerObject: ILogger;
-  private logLevel: number;
+  private logLevel: LogLevel;
 
   constructor(loggerObject: ILogger, logLevel: LogLevel) {
     this.loggerObject = loggerObject;

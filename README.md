@@ -275,7 +275,7 @@ A list of options and their default values is below:
 | cacheEngine | [ICacheEngine](https://github.com/Econify/graphql-rest-router/blob/master/index.d.ts#L81-L84) | null | Either a cache engine that [ships default](#Caching) with GQL Rest Router or adheres to the [ICacheEngine interface](#Custom-Cache-Engine) |
 
 ## Logging
-GraphQL Rest Router is capable of logging using your logger of choice with configurable log levels. The logger parameter implements [ILogger](https://github.com/Econify/graphql-rest-router/blob/master/index.d.ts#L92-L97) and is compatible with most standard loggers.
+GraphQL Rest Router is capable of logging incoming requests and errors. When creating your router, you may use a logger of your own choice. GraphQL Rest Router allows you to configure log levels. The logger parameter must implement [ILogger](https://github.com/Econify/graphql-rest-router/blob/master/index.d.ts#L92-L97), and is compatible with most standard logging libraries.
 
 ```js
 import GraphQLRestRouter from 'graphql-rest-router';

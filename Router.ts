@@ -3,6 +3,7 @@ import {
   IMountableItem,
   ICacheEngine,
   IConstructorRouteOptions,
+  LogLevel,
 } from '.';
 import Route from './Route';
 import express from 'express';
@@ -16,7 +17,7 @@ const DEFAULT_CONFIGURATION: IGlobalConfiguration = {
   logger: undefined,
   auth: undefined,
   proxy: undefined,
-  defaultLogLevel: 0,
+  defaultLogLevel: LogLevel.ERROR,
   defaultTimeoutInMs: 10000,
   defaultCacheTimeInMs: 0,
   autoDiscoverEndpoints: false,

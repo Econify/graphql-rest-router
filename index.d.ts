@@ -10,7 +10,7 @@ export interface IGlobalConfiguration {
   defaultTimeoutInMs?: number;
   defaultCacheTimeInMs?: number;
   logger?: ILogger;
-  defaultLogLevel?: number;
+  defaultLogLevel?: LogLevel;
   autoDiscoverEndpoints?: boolean;
   optimizeQueryRequest?: boolean;
   headers?: {};
@@ -24,7 +24,7 @@ export interface IConstructorRouteOptions {
   operationName: string;
   axios: AxiosInstance;
   logger?: ILogger;
-  defaultLogLevel: number;
+  defaultLogLevel: LogLevel;
   path?: string;
   cacheTimeInMs?: number;
   method?: string;

@@ -1,7 +1,8 @@
 import {
-  IMountableItem, IConstructorRouteOptions, IRouteOptions,
-  IOperationVariableMap, IOperationVariable, IResponse, ILogger,
+  IMountableItem, IConstructorRouteOptions, IRouteOptions, LogLevel,
+  IOperationVariableMap, IOperationVariable, IResponse,
 }  from '.';
+import Logger from './Logger';
 
 import { IncomingHttpHeaders } from 'http';
 import { DocumentNode, parse, print, getOperationAST } from 'graphql';
@@ -17,15 +18,6 @@ enum EHTTPMethod {
   PUT = 'put',
 }
 */
-
-// Is there a way that we can expose this enum to the developer?
-// Or just document the corresponding numbers?
-enum LogLevel {
-  ERROR = 0,
-  WARN = 1,
-  INFO = 2,
-  DEBUG = 3,
-}
 
 function isVariableArray(node: any): boolean {
   if (node.type.kind === 'NonNullType') {
@@ -67,7 +59,7 @@ function attemptJSONParse(variable: string): any {
 }
 
 function typecastVariable(variable: string, variableDefinition: IOperationVariable): any {
-  switch (variableDefinition.type) {
+  switch (variableDefinition && variableDefinition.type) {
     case 'Int':
       return parseInt(variable, 10);
     case 'Boolean':
@@ -100,12 +92,12 @@ export default class Route implements IMountableItem {
 
   private transformRequestFn: AxiosTransformer[] = [];
   private transformResponseFn: AxiosTransformer[] = [];
-  private logger?: ILogger;
+
+  private logger?: Logger;
 
   private staticVariables: {} = {};
   private defaultVariables: {} = {};
 
-  private logLevel: LogLevel = LogLevel.ERROR;
   private cacheTimeInMs: number = 0;
 
   constructor(configuration: IConstructorRouteOptions) {
@@ -114,7 +106,7 @@ export default class Route implements IMountableItem {
 
   private configureRoute(configuration: IConstructorRouteOptions) {
     const {
-      schema, operationName, logger,
+      schema, operationName, logger, defaultLogLevel,
       ...options
     } = configuration;
 
@@ -124,7 +116,6 @@ export default class Route implements IMountableItem {
 
     this.schema = typeof schema === 'string' ? parse(schema) : schema;
     this.axios = configuration.axios;
-    this.logger = logger;
 
     this.setOperationName(operationName);
 
@@ -133,6 +124,10 @@ export default class Route implements IMountableItem {
     }
 
     this.withOptions(options);
+
+    if (logger) {
+      this.logger = new Logger(logger, defaultLogLevel);
+    }
   }
 
   private filterHeadersForPassThrough(headers: IncomingHttpHeaders): IncomingHttpHeaders {
@@ -337,7 +332,7 @@ export default class Route implements IMountableItem {
   // areVariablesValid(variables: {}) {}
 
   setLogLevel(logLevel: LogLevel): this {
-    this.logLevel = logLevel;
+    this.logger && this.logger.setLogLevel(logLevel);
 
     return this;
   }
@@ -402,9 +397,7 @@ export default class Route implements IMountableItem {
   private async makeRequest(variables: {}, headers: {} = {}): Promise<IResponse> {
     const { axios, schema, operationName, path } = this;
 
-    if (this.logger && this.logLevel >= LogLevel.INFO) {
-      this.logger.info(`Incoming request: ${path}`)
-    }
+    this.logger && this.logger.info(`Incoming request on ${operationName} at ${path}, request variables: ${JSON.stringify(variables)}`);
 
     const config: AxiosRequestConfig = {
       data: {
@@ -422,17 +415,13 @@ export default class Route implements IMountableItem {
     try {
       const { data, status } = await axios(config);
 
-      if (this.logger && this.logLevel >= LogLevel.ERROR && data.errors && data.errors.length) {
-        data.errors.forEach((error: any) =>
-          this.logger && this.logger.error(`Error in GraphQL response: ${JSON.stringify(error)}`)
-        )
-      }
+      data.errors && data.errors.length && data.errors.forEach((error: any) => {
+        this.logger && this.logger.error(`Error in GraphQL response: ${JSON.stringify(error)}`)
+      });
 
       return <IResponse> { body: data, statusCode: status };
     } catch (error) {
-      if (this.logger && this.logLevel > -1) {
-        this.logger.error(error.stack);
-      }
+      this.logger && this.logger.error(error.stack);
 
       if (error.response) {
         return <IResponse> {

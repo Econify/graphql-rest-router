@@ -16,6 +16,7 @@ const DEFAULT_CONFIGURATION: IGlobalConfiguration = {
   logger: undefined,
   auth: undefined,
   proxy: undefined,
+  defaultLogLevel: 0,
   defaultTimeoutInMs: 10000,
   defaultCacheTimeInMs: 0,
   autoDiscoverEndpoints: false,
@@ -90,7 +91,7 @@ export default class Router {
   mount(mountableItem: IMountableItem, options?: any): IMountableItem;
   mount(operationNameOrMountableItem: string | IMountableItem, options?: any): IMountableItem {
     if (typeof operationNameOrMountableItem === 'string') {
-      const { schema, axios, options: { logger } } = this;
+      const { schema, axios, options: { logger, defaultLogLevel } } = this;
       const operationName = operationNameOrMountableItem;
 
       const passThroughHeaders = Boolean(options)
@@ -105,6 +106,7 @@ export default class Router {
         axios,
         schema,
         logger,
+        defaultLogLevel,
 
         passThroughHeaders,
       };

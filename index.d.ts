@@ -5,18 +5,12 @@ import axios, {
   AxiosBasicCredentials, AxiosProxyConfig, AxiosInstance
 } from 'axios';
 
-export interface ILogger {
-  error: (message: String) => void;
-  warn: (message: String) => void;
-  info: (message: String) => void;
-  debug: (message: String) => void;
-}
-
 export interface IGlobalConfiguration {
   cacheEngine?: ICacheEngine;
-  logger?: ILogger;
   defaultTimeoutInMs?: number;
   defaultCacheTimeInMs?: number;
+  logger?: ILogger;
+  defaultLogLevel?: number;
   autoDiscoverEndpoints?: boolean;
   optimizeQueryRequest?: boolean;
   headers?: {};
@@ -30,6 +24,7 @@ export interface IConstructorRouteOptions {
   operationName: string;
   axios: AxiosInstance;
   logger?: ILogger;
+  defaultLogLevel: number;
   path?: string;
   cacheTimeInMs?: number;
   method?: string;
@@ -94,4 +89,18 @@ export interface IMountableItem {
 export interface ICacheEngine {
   get: (key: string, setFn?: () => string|number|boolean) => string|number|boolean;
   set: (key: string, value: string|number|boolean) => void;
+}
+
+export interface ILogger {
+  error: (message: String) => void;
+  warn: (message: String) => void;
+  info: (message: String) => void;
+  debug: (message: String) => void;
+}
+
+export const enum LogLevel {
+  ERROR = 0,
+  WARN = 1,
+  INFO = 2,
+  DEBUG = 3,
 }

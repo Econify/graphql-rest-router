@@ -62,12 +62,6 @@ describe('Router', () => {
 
         assert.equal(operationName, getOperationName());
       });
-
-      it('should get operation name from configuration if only single argument provided', () => {
-        router.mount({ operationName });
-
-        assert.equal(operationName, getOperationName());
-      });
     });
   });
 

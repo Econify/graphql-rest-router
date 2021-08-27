@@ -286,6 +286,7 @@ const api = new GraphQLRestRouter('http://localhost:1227', schema, {
 });
 
 api.mount('CreateUser').setLogLevel(3); // Log everything
+api.mount('GetUser').setLogLevel(-1); // Silence
 ```
 
 

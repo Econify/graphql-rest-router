@@ -393,10 +393,15 @@ export default class Route implements IMountableItem {
       },
 
       headers,
-
-      transformRequest: this.transformRequestFn,
-      transformResponse: this.transformResponseFn,
     };
+
+    if (this.transformRequestFn.length) {
+      config.transformRequest = this.transformRequestFn;
+    }
+
+    if (this.transformResponseFn.length) {
+      config.transformResponse = this.transformResponseFn;
+    }
 
     try {
       const { data, status } = await axios(config);

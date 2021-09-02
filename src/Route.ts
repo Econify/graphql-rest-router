@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// TODO: UNDO THIS ^^^
+
 import { IncomingHttpHeaders } from 'http';
 import { DocumentNode, parse, print, getOperationAST } from 'graphql';
 import { AxiosTransformer, AxiosInstance, AxiosRequestConfig } from 'axios';
@@ -92,8 +95,8 @@ export default class Route implements IMountableItem {
   private transformRequestFn: AxiosTransformer[] = [];
   private transformResponseFn: AxiosTransformer[] = [];
 
-  private staticVariables: {} = {};
-  private defaultVariables: {} = {};
+  private staticVariables: Record<string, unknown> = {};
+  private defaultVariables: Record<string, unknown> = {};
 
   private cacheTimeInMs = 0;
 
@@ -129,6 +132,7 @@ export default class Route implements IMountableItem {
 
     this.passThroughHeaders.forEach(
       (header: string) => {
+        // eslint-disable-next-line no-prototype-builtins
         if (headers.hasOwnProperty(header)) {
           passThroughHeaders[header] = headers[header];
         }
@@ -235,7 +239,7 @@ export default class Route implements IMountableItem {
       );
   }
 
-  private warnForUsageOfStaticVariables(params: {}): void {
+  private warnForUsageOfStaticVariables(params: Record<string, unknown>): void {
     const staticVariablesAsKeys = Object.keys(this.staticVariables);
 
     const unassignableVariables = Object.keys(params).filter(
@@ -251,13 +255,13 @@ export default class Route implements IMountableItem {
     }
   }
 
-  private assembleVariables(params: {}): {} {
+  private assembleVariables(params: Record<string, unknown>): Record<string, unknown> {
     const { staticVariables, defaultVariables } = this;
 
     return { ...defaultVariables, ...params, ...staticVariables };
   }
 
-  private missingVariables(variables: {}): string[] {
+  private missingVariables(variables: Record<string, unknown>): string[] {
     const variablesAsKeys = Object.keys(variables);
 
     return this.requiredVariables
@@ -269,8 +273,8 @@ export default class Route implements IMountableItem {
   //
   // This method will iterate through all variables, check their definition type from the spec
   // and typecast them
-  private typecastVariables(variables: { [key: string]: string }): { [key: string]: any } {
-    const parsedVariables: { [key: string]: any }  = {};
+  private typecastVariables(variables: { [key: string]: string }): { [key: string]: unknown } {
+    const parsedVariables: { [key: string]: unknown }  = {};
 
     Object.entries(variables).forEach(
       ([variableName, value]) => {
@@ -284,7 +288,7 @@ export default class Route implements IMountableItem {
   }
 
   asExpressRoute() {
-    return async (req: express.Request, res: express.Response) => {
+    return async (req: express.Request, res: express.Response): Promise<unknown> => {
       const { query, params, body } = req;
 
       const parsedQueryVariables = this.typecastVariables(query as any);
@@ -315,11 +319,11 @@ export default class Route implements IMountableItem {
     };
   }
 
-  asKoaRoute() {
+  asKoaRoute(): never {
     throw new Error('Not available! Submit PR');
   }
 
-  asMetal() {
+  asMetal(): never {
     throw new Error('Not available! Submit PR');
   }
 
@@ -382,7 +386,10 @@ export default class Route implements IMountableItem {
       );
   }
 
-  private async makeRequest(variables: {}, headers: {} = {}): Promise<IResponse> {
+  private async makeRequest(
+    variables: Record<string, unknown>,
+    headers: Record<string, unknown> = {}
+  ): Promise<IResponse> {
     const { axios, schema, operationName } = this;
 
     const config: AxiosRequestConfig = {

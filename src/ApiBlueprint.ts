@@ -24,8 +24,12 @@ export default class ApiBlueprint implements IMountableItem {
     return this;
   }
 
-  // This doesn't do anything yet?
   withOptions(options: Record<string, unknown>): this {
+    // This doesn't do anything yet.
+    // Did not want to comment out at the moment
+    if (options) {
+      return this;
+    }
 
     return this;
   }

@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// TODO: UNDO THESE ^^
 import * as express from 'express';
 import * as bodyParser from 'body-parser';
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
@@ -6,6 +9,8 @@ import { parse, DocumentNode, getOperationAST } from 'graphql';
 import Route from './Route';
 import { IGlobalConfiguration, IMountableItem, IConstructorRouteOptions } from './types';
 
+// TODO: Fix this in ts config and change to import
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const version = require('../package.json').version;
 
 const DEFAULT_CONFIGURATION: IGlobalConfiguration = {
@@ -89,6 +94,7 @@ export default class Router {
       const { schema, axios } = this;
       const operationName = operationNameOrMountableItem;
 
+      // eslint-disable-next-line no-extra-boolean-cast
       const passThroughHeaders = Boolean(options)
         ? [...this.passThroughHeaders, ...options.passThroughHeaders]
         : [...this.passThroughHeaders];
@@ -123,7 +129,7 @@ export default class Router {
   }
 
   // TODO: Temporarily using express as metal
-  listen(port: number, callback?: () => void) {
+  listen(port: number, callback?: () => void): void {
     const router = express();
 
     router.use(this.asExpressRouter());
@@ -131,7 +137,7 @@ export default class Router {
     router.listen(port, callback);
   }
 
-  asExpressRouter() {
+  asExpressRouter(): express.Router {
     const router: any = express.Router();
 
     router.use(bodyParser.json());
@@ -146,7 +152,7 @@ export default class Router {
     return router;
   }
 
-  asKoaRouter() {
+  asKoaRouter(): never {
     throw new Error('Not Implemented');
   }
 }

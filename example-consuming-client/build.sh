@@ -16,7 +16,7 @@ fi
 
 npm run prepare
 
-echo 'COMPLETED REST ROUTER BUILD***]'
+echo '[***COMPLETED REST ROUTER BUILD***]'
 
 # build this example application
 cd ./example-consuming-client

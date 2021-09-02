@@ -1,4 +1,4 @@
-import { ICacheEngine } from '.';
+import { ICacheEngine } from './types';
 
 const STORE_EXPIRATION_CHECK_IN_MS = 10;
 const DEFAULT_CACHE_TIME_IN_MS = 10;
@@ -30,7 +30,7 @@ export default class InMemoryCache implements ICacheEngine {
       Object.keys(storeCacheExpiration).forEach((key: string): void => {
         if (storeCacheExpiration[key] < currentTime) {
           delete storeCacheExpiration[key];
-          delete store[key]
+          delete store[key];
         }
       });
     }, STORE_EXPIRATION_CHECK_IN_MS);

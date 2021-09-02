@@ -1,4 +1,4 @@
-import { ILogger, LogLevel } from ".";
+import { ILogger, LogLevel } from "./types";
 
 export default class Logger implements ILogger {
   private loggerObject: ILogger;

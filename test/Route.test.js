@@ -1,6 +1,6 @@
 const { assert } = require('chai');
-const Route = require('../Route').default;
-const Logger = require('../Logger').default;
+const Route = require('../src/Route').default;
+const Logger = require('../src/Logger').default;
 const fs = require('fs');
 
 describe('Route', () => {
@@ -11,14 +11,16 @@ describe('Route', () => {
     describe('with valid arguments', () => {
       describe('when using minimal configuration', () => {
         const operationName = 'GetUserById';
+        const operationAsPath = `/${operationName}`;
         let route;
 
         beforeEach(() => {
           route = new Route({ graphQLEndpoint, schema, operationName });
         });
 
-        it('should set path to the operation name', () => {
-          assert.equal(route.path, operationName);
+        it('should set path to the path and operation name', () => {
+          assert.equal(route.operationName, operationName);
+          assert.equal(route.path, operationAsPath);
         });
       });
 
@@ -118,13 +120,17 @@ describe('Route', () => {
       });
 
       it('should set operation variables', () => {
-        const operationVariables = [
-          {
-            name: 'id',
+        const name = 'id';
+
+        const operationVariables = {
+          [name]: {
+            name,
             required: true,
             defaultValue: undefined,
+            array: false,
+            type: 'Int',
           }
-        ];
+        };
 
         assert.deepEqual(route.operationVariables, operationVariables);
       });
@@ -134,9 +140,12 @@ describe('Route', () => {
   describe('#path', () => {
     it('should use the operation name as the default path', () => {
       const operationName = 'GetUserById';
+      const operationAsPath = `/${operationName}`;
 
       const route = new Route({ graphQLEndpoint, schema, operationName });
-      assert.equal(route.path, operationName);
+      
+      assert.equal(route.operationName, operationName);
+      assert.equal(route.path, operationAsPath);
     });
   });
 

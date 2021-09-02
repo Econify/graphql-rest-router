@@ -1,22 +1,25 @@
 {
   "compilerOptions": {
     "target": "es2016",
-    "outDir": "build/src",
-    "rootDir": "src/",
+    "outDir": "./build/",
+    "rootDir": "./src/",
     "moduleResolution": "node",
     "module": "commonjs",
+    "importHelpers": true,
+    "inlineSourceMap": true,
+    "strictNullChecks": true,
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitAny": false,
+    "noImplicitReturns": true,
     "noImplicitThis": true,
-    "declaration": true,
-    "declarationDir": "build/src/",
     "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true,
+    "downlevelIteration": true,
     "allowUnreachableCode": false,
     "allowJs": false,
     "lib": [
       "dom",
-      "dom.iterable",
       "es5",
       "es6",
       "es7",
@@ -34,13 +37,10 @@
     }
   },
   "include": [
-    "**/*.ts",
-    "**/*.graphql",
-    "package.json"
+    "./**/*.ts",
+    "./**/*.graphql"
   ],
   "exclude": [
-    "node_modules/**",
-    "example-consuming-client",
-    "test"
+    "./node_modules/**",
   ]
 }

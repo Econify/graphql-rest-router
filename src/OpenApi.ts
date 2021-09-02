@@ -1,8 +1,8 @@
-import { IMountableItem, IOperationVariable, IOpenApiOptions,  } from '.';
+import express from 'express';
 import describeRouteVariables from './describeRouteVariables';
 import Router from './Router';
 import Route from './Route';
-import express from 'express';
+import { IMountableItem, IOperationVariable, IOpenApiOptions, IGlobalConfiguration } from './types';
 
 interface IParameter {
   name: string;
@@ -29,7 +29,7 @@ interface IBuildParametersArguments {
   refLocation: string;
 }
 
-const PATH_VARIABLES_REGEX = /:([A-Za-z]+)/g
+const PATH_VARIABLES_REGEX = /:([A-Za-z]+)/g;
 
 function resolveBodySchemaName(route: Route): string {
   return `${route.operationName}Body`;
@@ -124,7 +124,10 @@ function openApiPath(path: string): string {
   return path.replace(PATH_VARIABLES_REGEX, '{$1}');
 }
 
-function buildSchemaParameter(variableDefinition: IOperationVariable, refLocation: string): IParameterArraySchema | IParameterItemTypeOrRef {
+function buildSchemaParameter(
+  variableDefinition: IOperationVariable,
+  refLocation: string
+): IParameterArraySchema | IParameterItemTypeOrRef {
   if (variableDefinition.array) {
     return {
       type: 'array',
@@ -153,8 +156,8 @@ function buildParametersArray({ variableDefinitions, variableLocation, refLocati
 }
 
 class MountableDocument implements IMountableItem {
-  public path: string = '/docs/openapi';
-  public httpMethod: string = 'get';
+  public path = '/docs/openapi';
+  public httpMethod = 'get';
 
   protected router?: Router;
 
@@ -177,11 +180,12 @@ class MountableDocument implements IMountableItem {
     return '';
   }
 
-  withOptions(options: {}): this {
+  // Not currently used
+  withOptions(options: IGlobalConfiguration): this {
     return this;
   }
 
-  asExpressRoute(): (req: express.Request, res: express.Response) => Promise<void> {
+  asExpressRoute(): ((req: express.Request, res: express.Response) => void) | never {
     const generateDoc = this.generateDocumentation();
 
     return async (req: express.Request, res: express.Response) => {
@@ -190,14 +194,14 @@ class MountableDocument implements IMountableItem {
       res
         .status(200)
         .json(doc);
-    }
+    };
   }
 
-  asKoaRoute() {
+  asKoaRoute(): ((req: express.Request, res: express.Response) => void) | never {
     throw new Error('not yet implemented');
   }
 
-  asMetal() {
+  asMetal(): ((req: express.Request, res: express.Response) => void) | never {
     throw new Error('not yet implemented');
   }
 
@@ -211,13 +215,13 @@ class MountableDocument implements IMountableItem {
         interface.
       `);
     }
-    
+
     return router;
   }
 }
 
 export class V2 extends MountableDocument {
-  public path: string = '/docs/swagger';
+  public path = '/docs/swagger';
 
   protected async generateDocumentation(): Promise<any> {
     const router = this.getRouter();
@@ -353,7 +357,7 @@ export class V3 extends MountableDocument {
       doc.license.name = options.license;
     }
 
-    if (options.host) { 
+    if (options.host) {
       doc.servers = [];
 
       doc.servers.push({
@@ -404,7 +408,7 @@ export class V3 extends MountableDocument {
           content: {
             'application/json': {
               schema: {
-                "$ref": `${refLocation}/${schemaName}`
+                '$ref': `${refLocation}/${schemaName}`
               },
             },
           },

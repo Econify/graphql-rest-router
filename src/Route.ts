@@ -1,14 +1,17 @@
-import {
-  IMountableItem, IConstructorRouteOptions, IRouteOptions,
-  IOperationVariableMap, IOperationVariable, IResponse,
-}  from '.';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// TODO: UNDO THIS ^^^
 
 import { IncomingHttpHeaders } from 'http';
 import { DocumentNode, parse, print, getOperationAST } from 'graphql';
 import { AxiosTransformer, AxiosInstance, AxiosRequestConfig } from 'axios';
 import * as express from 'express';
 
-const PATH_VARIABLES_REGEX = /:([A-Za-z]+)/g
+import {
+  IMountableItem, IConstructorRouteOptions, IRouteOptions,
+  IOperationVariableMap, IOperationVariable, IResponse,
+}  from './types';
+
+const PATH_VARIABLES_REGEX = /:([A-Za-z]+)/g;
 
 /*
 enum EHTTPMethod {
@@ -72,7 +75,7 @@ function typecastVariable(variable: string, variableDefinition: IOperationVariab
 
 export default class Route implements IMountableItem {
   public path!: string;
-  public httpMethod: string = 'get';
+  public httpMethod = 'get';
 
   public passThroughHeaders: string[] = [];
   public operationVariables!: IOperationVariableMap;
@@ -84,7 +87,7 @@ export default class Route implements IMountableItem {
   // that changes made after export will not be respected by
   // the export and will only be respected on exports made after
   // the change
-  private configurationIsFrozen: boolean = false;
+  private configurationIsFrozen = false;
 
   private axios!: AxiosInstance;
   private schema!: DocumentNode;
@@ -92,18 +95,19 @@ export default class Route implements IMountableItem {
   private transformRequestFn: AxiosTransformer[] = [];
   private transformResponseFn: AxiosTransformer[] = [];
 
-  private staticVariables: {} = {};
-  private defaultVariables: {} = {};
+  private staticVariables: Record<string, unknown> = {};
+  private defaultVariables: Record<string, unknown> = {};
 
-  private cacheTimeInMs: number = 0;
+  private cacheTimeInMs = 0;
 
   constructor(configuration: IConstructorRouteOptions) {
     this.configureRoute(configuration);
   }
 
   private configureRoute(configuration: IConstructorRouteOptions) {
-    const { 
-      schema, operationName,
+    const {
+      schema,
+      operationName,
       ...options
     } = configuration;
 
@@ -128,6 +132,7 @@ export default class Route implements IMountableItem {
 
     this.passThroughHeaders.forEach(
       (header: string) => {
+        // eslint-disable-next-line no-prototype-builtins
         if (headers.hasOwnProperty(header)) {
           passThroughHeaders[header] = headers[header];
         }
@@ -140,7 +145,7 @@ export default class Route implements IMountableItem {
   whitelistHeaderForPassThrough(header: string): this {
     this.passThroughHeaders.push(header);
 
-    return this
+    return this;
   }
 
   at(path: string): this {
@@ -165,7 +170,7 @@ export default class Route implements IMountableItem {
           name: node.variable.name.value,
           required: node.type.kind === 'NonNullType',
           type: translateVariableType(node),
-          array: isVariableArray(node), 
+          array: isVariableArray(node),
           defaultValue: (node.defaultValue || {}).value,
         };
 
@@ -179,7 +184,7 @@ export default class Route implements IMountableItem {
   private setOperationName(operationName: string): void {
     const operation = getOperationAST(this.schema, operationName);
 
-    if (!Boolean(operation)) {
+    if (!operation) {
       throw new Error(`The named query "${operationName}" does not exist in the Schema provided`);
     }
 
@@ -234,7 +239,7 @@ export default class Route implements IMountableItem {
       );
   }
 
-  private warnForUsageOfStaticVariables(params: {}): void {
+  private warnForUsageOfStaticVariables(params: Record<string, unknown>): void {
     const staticVariablesAsKeys = Object.keys(this.staticVariables);
 
     const unassignableVariables = Object.keys(params).filter(
@@ -250,13 +255,13 @@ export default class Route implements IMountableItem {
     }
   }
 
-  private assembleVariables(params: {}): {} {
+  private assembleVariables(params: Record<string, unknown>): Record<string, unknown> {
     const { staticVariables, defaultVariables } = this;
 
     return { ...defaultVariables, ...params, ...staticVariables };
   }
 
-  private missingVariables(variables: {}): string[] {
+  private missingVariables(variables: Record<string, unknown>): string[] {
     const variablesAsKeys = Object.keys(variables);
 
     return this.requiredVariables
@@ -268,8 +273,8 @@ export default class Route implements IMountableItem {
   //
   // This method will iterate through all variables, check their definition type from the spec
   // and typecast them
-  private typecastVariables(variables: { [key: string]: string }): { [key: string]: any } {
-    const parsedVariables: { [key: string]: any }  = {};
+  private typecastVariables(variables: { [key: string]: string }): { [key: string]: unknown } {
+    const parsedVariables: { [key: string]: unknown }  = {};
 
     Object.entries(variables).forEach(
       ([variableName, value]) => {
@@ -283,10 +288,10 @@ export default class Route implements IMountableItem {
   }
 
   asExpressRoute() {
-    return async (req: express.Request, res: express.Response) => {
+    return async (req: express.Request, res: express.Response): Promise<unknown> => {
       const { query, params, body } = req;
-      
-      const parsedQueryVariables = this.typecastVariables(query);
+
+      const parsedQueryVariables = this.typecastVariables(query as any);
       const parsedPathVariables = this.typecastVariables(params);
 
       const providedVariables = { ...parsedQueryVariables, ...parsedPathVariables, ...body };
@@ -314,11 +319,11 @@ export default class Route implements IMountableItem {
     };
   }
 
-  asKoaRoute() {
+  asKoaRoute(): never {
     throw new Error('Not available! Submit PR');
   }
 
-  asMetal() {
+  asMetal(): never {
     throw new Error('Not available! Submit PR');
   }
 
@@ -381,7 +386,10 @@ export default class Route implements IMountableItem {
       );
   }
 
-  private async makeRequest(variables: {}, headers: {} = {}): Promise<IResponse> {
+  private async makeRequest(
+    variables: Record<string, unknown>,
+    headers: Record<string, unknown> = {}
+  ): Promise<IResponse> {
     const { axios, schema, operationName } = this;
 
     const config: AxiosRequestConfig = {
@@ -392,10 +400,15 @@ export default class Route implements IMountableItem {
       },
 
       headers,
-
-      transformRequest: this.transformRequestFn,
-      transformResponse: this.transformResponseFn,
     };
+
+    if (this.transformRequestFn.length) {
+      config.transformRequest = this.transformRequestFn;
+    }
+
+    if (this.transformResponseFn.length) {
+      config.transformResponse = this.transformResponseFn;
+    }
 
     try {
       const { data, status } = await axios(config);
@@ -409,7 +422,7 @@ export default class Route implements IMountableItem {
         };
       }
 
-      if (error.message.indexOf("timeout") >= 0) {
+      if (error.message.indexOf('timeout') >= 0) {
         return <IResponse> {
           statusCode: 504,
           body: {

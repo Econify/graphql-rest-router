@@ -1,6 +1,6 @@
 const { assert } = require('chai');
 const { mock, spy } = require('sinon');
-const Logger = require('../Logger').default;
+const Logger = require('../src/Logger').default;
 
 const loggerObject = {
   warn: () => undefined,

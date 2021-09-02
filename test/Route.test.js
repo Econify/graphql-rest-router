@@ -1,5 +1,6 @@
 const { assert } = require('chai');
 const Route = require('../src/Route').default;
+const Logger = require('../src/Logger').default;
 const fs = require('fs');
 
 describe('Route', () => {
@@ -29,6 +30,8 @@ describe('Route', () => {
           graphQLEndpoint,
           operationName: 'GetUserByEmail',
           path: '/user/:id',
+          logger: console,
+          defaultLogLevel: 3,
         };
         let route;
 
@@ -43,13 +46,25 @@ describe('Route', () => {
         it('should set path correctly', () => {
           assert.equal(route.path, configuration.path);
         });
+
+        it('should create a Logger instance', () => {
+          assert.instanceOf(route.logger, Logger, 'route logger is an instance of Logger');
+        })
       });
 
       describe('when using chained configuration', () => {
         let route;
         beforeEach(() => {
-          route = new Route({ graphQLEndpoint, schema, operationName: 'GetUserById' });
+          route = new Route({ graphQLEndpoint, schema, operationName: 'GetUserById', logger: console, defaultLogLevel: 3 });
         });
+
+        it('should allow you to change logging level with .setLogLevel()', () => {
+          const newLogLevel = -1;
+
+          route.setLogLevel(newLogLevel);
+
+          assert.equal(route.logger.logLevel, newLogLevel);
+        })
 
         it('should allow you to change path with .at()', () => {
           const path = '/test';

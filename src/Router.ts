@@ -7,7 +7,7 @@ import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { parse, DocumentNode, getOperationAST } from 'graphql';
 
 import Route from './Route';
-import { IGlobalConfiguration, IMountableItem, IConstructorRouteOptions } from './types';
+import { IGlobalConfiguration, IMountableItem, IConstructorRouteOptions, LogLevel } from './types';
 
 // TODO: Fix this in ts config and change to import
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -15,8 +15,10 @@ const version = require('../package.json').version;
 
 const DEFAULT_CONFIGURATION: IGlobalConfiguration = {
   cacheEngine: undefined,
+  logger: undefined,
   auth: undefined,
   proxy: undefined,
+  defaultLogLevel: LogLevel.ERROR,
   defaultTimeoutInMs: 10000,
   defaultCacheTimeInMs: 0,
   autoDiscoverEndpoints: false,
@@ -91,7 +93,7 @@ export default class Router {
   mount(mountableItem: IMountableItem, options?: any): IMountableItem;
   mount(operationNameOrMountableItem: string | IMountableItem, options?: any): IMountableItem {
     if (typeof operationNameOrMountableItem === 'string') {
-      const { schema, axios } = this;
+      const { schema, axios, options: { logger, defaultLogLevel } } = this;
       const operationName = operationNameOrMountableItem;
 
       // eslint-disable-next-line no-extra-boolean-cast
@@ -106,6 +108,8 @@ export default class Router {
 
         axios,
         schema,
+        logger,
+        defaultLogLevel,
 
         passThroughHeaders,
       };

@@ -9,6 +9,8 @@ export interface IGlobalConfiguration {
   cacheEngine?: ICacheEngine;
   defaultTimeoutInMs?: number;
   defaultCacheTimeInMs?: number;
+  logger?: ILogger;
+  defaultLogLevel?: LogLevel;
   autoDiscoverEndpoints?: boolean;
   optimizeQueryRequest?: boolean;
   headers?: Record<string, unknown>;
@@ -21,6 +23,8 @@ export interface IConstructorRouteOptions {
   schema: DocumentNode | string; // GraphQL Document Type
   operationName: string;
   axios: AxiosInstance;
+  logger?: ILogger;
+  defaultLogLevel: LogLevel;
   path?: string;
   cacheTimeInMs?: number;
   method?: string;
@@ -85,4 +89,18 @@ export interface IMountableItem {
 export interface ICacheEngine {
   get: (key: string, setFn?: () => string|number|boolean) => string|number|boolean;
   set: (key: string, value: string|number|boolean) => void;
+}
+
+export interface ILogger {
+  error: (message: String) => void;
+  warn: (message: String) => void;
+  info: (message: String) => void;
+  debug: (message: String) => void;
+}
+
+export const enum LogLevel {
+  ERROR = 0,
+  WARN = 1,
+  INFO = 2,
+  DEBUG = 3,
 }

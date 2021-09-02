@@ -7,9 +7,11 @@ import { AxiosTransformer, AxiosInstance, AxiosRequestConfig } from 'axios';
 import * as express from 'express';
 
 import {
-  IMountableItem, IConstructorRouteOptions, IRouteOptions,
+  IMountableItem, IConstructorRouteOptions, IRouteOptions, LogLevel,
   IOperationVariableMap, IOperationVariable, IResponse,
 }  from './types';
+
+import Logger from './Logger';
 
 const PATH_VARIABLES_REGEX = /:([A-Za-z]+)/g;
 
@@ -61,7 +63,7 @@ function attemptJSONParse(variable: string): any {
 }
 
 function typecastVariable(variable: string, variableDefinition: IOperationVariable): any {
-  switch (variableDefinition.type) {
+  switch (variableDefinition && variableDefinition.type) {
     case 'Int':
       return parseInt(variable, 10);
     case 'Boolean':
@@ -95,6 +97,8 @@ export default class Route implements IMountableItem {
   private transformRequestFn: AxiosTransformer[] = [];
   private transformResponseFn: AxiosTransformer[] = [];
 
+  private logger?: Logger;
+
   private staticVariables: Record<string, unknown> = {};
   private defaultVariables: Record<string, unknown> = {};
 
@@ -108,6 +112,8 @@ export default class Route implements IMountableItem {
     const {
       schema,
       operationName,
+      logger,
+      defaultLogLevel,
       ...options
     } = configuration;
 
@@ -125,6 +131,10 @@ export default class Route implements IMountableItem {
     }
 
     this.withOptions(options);
+
+    if (logger) {
+      this.logger = new Logger(logger, defaultLogLevel);
+    }
   }
 
   private filterHeadersForPassThrough(headers: IncomingHttpHeaders): IncomingHttpHeaders {
@@ -329,6 +339,12 @@ export default class Route implements IMountableItem {
 
   // areVariablesValid(variables: {}) {}
 
+  setLogLevel(logLevel: LogLevel): this {
+    this.logger && this.logger.setLogLevel(logLevel);
+
+    return this;
+  }
+
   transformRequest(fn: AxiosTransformer): this {
     this.transformRequestFn.push(fn);
 
@@ -390,7 +406,9 @@ export default class Route implements IMountableItem {
     variables: Record<string, unknown>,
     headers: Record<string, unknown> = {}
   ): Promise<IResponse> {
-    const { axios, schema, operationName } = this;
+    const { axios, schema, operationName, path } = this;
+
+    this.logger && this.logger.info(`Incoming request on ${operationName} at ${path}, request variables: ${JSON.stringify(variables)}`);
 
     const config: AxiosRequestConfig = {
       data: {
@@ -413,8 +431,14 @@ export default class Route implements IMountableItem {
     try {
       const { data, status } = await axios(config);
 
+      data.errors && data.errors.length && data.errors.forEach((error: any) => {
+        this.logger && this.logger.error(`Error in GraphQL response: ${JSON.stringify(error)}`)
+      });
+
       return <IResponse> { body: data, statusCode: status };
     } catch (error) {
+      this.logger && this.logger.error(error.stack);
+
       if (error.response) {
         return <IResponse> {
           body: error.response.data,

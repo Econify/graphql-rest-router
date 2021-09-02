@@ -38,11 +38,12 @@ describe('Router', () => {
   describe('#mount', () => {
     describe('argument overloading', () => {
       const operationName = 'GetUserById';
+      const defaultLogLevel = 3;
       let router;
       let spy;
 
       beforeEach(() => {
-        router = new Router(endpoint, schema);
+        router = new Router(endpoint, schema, { logger: console, defaultLogLevel });
         spy = sinon.spy(Route.prototype, 'configureRoute');
       });
 
@@ -54,6 +55,12 @@ describe('Router', () => {
         const { operationName } = Route.prototype.configureRoute.getCall(0).args[0];
 
         return operationName;
+      }
+
+      function getLoggerConfig() {
+        const { logger, defaultLogLevel } = Route.prototype.configureRoute.getCall(0).args[0];
+
+        return { logger, defaultLogLevel };
       }
 
       it('should combine operation name into the configuration', () => {
@@ -68,6 +75,15 @@ describe('Router', () => {
 
       //   assert.equal(operationName, getOperationName());
       // });
+
+      it('should pass logger object to Route class', () => {
+        router.mount(operationName);
+
+        const { logger, defaultLogLevel: resultingDefaultLogLevel } = getLoggerConfig();
+
+        assert.equal(console, logger);
+        assert.equal(defaultLogLevel, resultingDefaultLogLevel);
+      })
     });
   });
 });

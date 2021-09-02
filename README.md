@@ -274,6 +274,23 @@ A list of options and their default values is below:
 | proxy | [AxiosProxyConfig](https://github.com/axios/axios/blob/master/index.d.ts#L14-L22) | null | If a proxy is required to communicate with your GraphQL server from the server that GQL Rest Router is running on, provide it here. |
 | cacheEngine | [ICacheEngine](https://github.com/Econify/graphql-rest-router/blob/master/index.d.ts#L81-L84) | null | Either a cache engine that [ships default](#Caching) with GQL Rest Router or adheres to the [ICacheEngine interface](#Custom-Cache-Engine) |
 
+## Logging
+GraphQL Rest Router is capable of logging incoming requests and errors. When creating your router, you may use a logger of your own choice. GraphQL Rest Router allows you to configure log levels. The logger parameter must implement [ILogger](https://github.com/Econify/graphql-rest-router/blob/master/index.d.ts#L92-L97), and is compatible with most standard logging libraries.
+
+```js
+import GraphQLRestRouter from 'graphql-rest-router';
+
+const api = new GraphQLRestRouter('http://localhost:1227', schema, {
+  logger: console,
+  defaultLogLevel: 0 // Log only errors
+});
+
+api.mount('CreateUser').setLogLevel(3); // Log everything
+api.mount('GetUser').setLogLevel(-1); // Silence
+```
+
+
+
 ## Caching
 GraphQL Rest Router ships with two cache interfaces stock and supports any number of custom or third party caching interfaces as long as they adhere to [ICacheEngine](https://github.com/Econify/graphql-rest-router/blob/master/index.d.ts#L81-L84)
 

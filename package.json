@@ -11,6 +11,7 @@
     "lint": "eslint . --ext .ts",
     "build": "tsc --build tsconfig.build.json && cp ./package.json ./build/package.json",
     "clean-build": "rm -rf build",
+    "live-test": "bash ./example-consuming-client/build.sh",
     "prepare": "npm run clean-build && npm run build",
     "test": "mocha -r ts-node/register ./test/*.test.js"
   },

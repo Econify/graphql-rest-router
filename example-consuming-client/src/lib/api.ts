@@ -18,7 +18,19 @@ const api = new GraphQLRestRouter(ENDPOINT, SCHEMA);
 api.mount('GetCharacters').at('/characters/');
 api.mount('GetCharacterById').at('/characters/:id');
 
-api.mount('GetLocations').at('/locations');
+api.mount('GetLocations').at('/locations').transformResponse(response => {
+  const json = JSON.parse(response);
+  const { data, errors } = json;
+
+  return {
+    data: {
+      isTransformed: true,
+      ...data,
+      errors,
+    }
+  };
+});
+
 api.mount('GetLocationById').at('/locations/:id');
 
 api.mount('GetEpisodes').at('episodes');

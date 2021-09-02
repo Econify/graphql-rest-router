@@ -1,18 +1,31 @@
+# Set current shell location to here so can be
+# run via parent npm run live-test or from current directory
+cd "$(dirname "$0")"
+
 #  Build graphql rest router
 cd ../
-# npm ci
+
+# npm install only if graphql-rest-routers node_modules are not found
+if [ -d "node_modules" ] 
+then
+    echo "[***Node modules exist***]"
+else
+    echo "[***Node modules do not exist in parent. Installing all dependencies.***]"
+    npm install
+fi
+
 npm run prepare
 
-echo 'COMPLETED REST ROUTER BUILD'
+echo 'COMPLETED REST ROUTER BUILD***]'
 
-# build this application
+# build this example application
 cd ./example-consuming-client
 
 if [ -d "./node_modules" ] 
 then
-    echo "Node modules exist. Just installing rest router."
+    echo "[***Node modules exist. Just installing rest router.***]"
 else
-    echo "Node modules does not exist. Installing all dependencies."
+    echo "[***Node modules does not exist. Installing all dependencies.***]"
     npm install
 fi
 

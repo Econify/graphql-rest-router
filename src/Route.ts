@@ -432,7 +432,7 @@ export default class Route implements IMountableItem {
       const { data, status } = await axios(config);
 
       data.errors && data.errors.length && data.errors.forEach((error: any) => {
-        this.logger && this.logger.error(`Error in GraphQL response: ${JSON.stringify(error)}`)
+        this.logger && this.logger.error(`Error in GraphQL response: ${JSON.stringify(error)}`);
       });
 
       return <IResponse> { body: data, statusCode: status };

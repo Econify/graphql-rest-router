@@ -4,9 +4,6 @@
   "description": "",
   "main": "./src/index.js",
   "types": "./src/types.d.ts",
-  "files": [
-    "*.ts"
-  ],
   "scripts": {
     "lint": "eslint . --ext .ts",
     "build": "tsc --build tsconfig.build.json && cp ./package.json ./build/package.json",

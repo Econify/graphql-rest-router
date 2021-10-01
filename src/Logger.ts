@@ -1,6 +1,13 @@
-import { ILogger, LogLevel } from './types';
+import { ILogger, ILogLevels, LogLevel } from './types';
 
-export default class Logger implements ILogger {
+export const LogLevels: ILogLevels = {
+  ERROR: 0,
+  WARN: 1,
+  INFO: 2,
+  DEBUG: 3,
+};
+
+export class Logger implements ILogger {
   private loggerObject: ILogger;
   private logLevel: LogLevel;
 
@@ -18,25 +25,25 @@ export default class Logger implements ILogger {
   }
 
   public debug(message: string): void {
-    if (this.shouldLog(LogLevel.DEBUG)) {
+    if (this.shouldLog(LogLevels.DEBUG)) {
       this.loggerObject.debug(message);
     }
   }
 
   public info(message: string): void {
-    if (this.shouldLog(LogLevel.INFO)) {
+    if (this.shouldLog(LogLevels.INFO)) {
       this.loggerObject.info(message);
     }
   }
 
   public warn(message: string): void {
-    if (this.shouldLog(LogLevel.WARN)) {
+    if (this.shouldLog(LogLevels.WARN)) {
       this.loggerObject.warn(message);
     }
   }
 
   public error(message: string): void {
-    if (this.shouldLog(LogLevel.ERROR)) {
+    if (this.shouldLog(LogLevels.ERROR)) {
       this.loggerObject.error(message);
     }
   }

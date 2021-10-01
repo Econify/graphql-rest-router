@@ -11,7 +11,7 @@ import {
   IOperationVariableMap, IOperationVariable, IResponse,
 }  from './types';
 
-import Logger from './Logger';
+import { Logger } from './Logger';
 
 const PATH_VARIABLES_REGEX = /:([A-Za-z]+)/g;
 

@@ -1,13 +1,14 @@
 import { ILogger, ILogLevels, LogLevel } from './types';
 
 export const LogLevels: ILogLevels = {
+  SILENT: -1,
   ERROR: 0,
   WARN: 1,
   INFO: 2,
   DEBUG: 3,
 };
 
-export class Logger implements ILogger {
+export default class Logger implements ILogger {
   private loggerObject: ILogger;
   private logLevel: LogLevel;
 

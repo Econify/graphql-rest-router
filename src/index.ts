@@ -7,5 +7,4 @@ import ApiBlueprint from './ApiBlueprint';
 
 export * from './types';
 export default Router;
-export { Route, OpenApi, LogLevels, ApiBlueprint }; // TODO: these exports are unusable in TS. How to fix?
-
+export { Route, OpenApi, LogLevels, ApiBlueprint };

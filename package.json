@@ -1,6 +1,6 @@
 {
   "name": "graphql-rest-router",
-  "version": "1.0.0-alpha.13",
+  "version": "1.0.0-alpha.14",
   "description": "",
   "main": "src/index.js",
   "types": "src/index.d.ts",

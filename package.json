@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "lint": "eslint . --ext .ts",
-    "build": "tsc --build tsconfig.build.json && cp ./package.json ./build/package.json",
+    "build": "tsc --build tsconfig.build.json && cp ./package.json ./build/package.json && cp ./README.md ./build/README.md",
     "clean": "rm -rf build",
     "live-test": "bash ./example-consuming-client/build.sh",
     "clean-build": "npm run clean && npm run build",

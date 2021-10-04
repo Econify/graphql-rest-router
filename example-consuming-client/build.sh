@@ -23,7 +23,7 @@ then
     echo "Build exists, skipping"
 else
     echo "Building..."
-    npm run clean-build
+    npm run build
 fi
 
 echo 'Completed build'

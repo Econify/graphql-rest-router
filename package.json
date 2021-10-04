@@ -6,10 +6,9 @@
   "types": "src/index.d.ts",
   "scripts": {
     "lint": "eslint . --ext .ts",
-    "build": "tsc && cp package.json README.md build",
+    "build": "npm run clean && tsc && cp package.json README.md build",
     "clean": "rm -rf build",
     "live-test": "bash ./example-consuming-client/build.sh",
-    "clean-build": "npm run clean && npm run build",
     "test": "mocha -r ts-node/register ./test/*.test.js"
   },
   "repository": {

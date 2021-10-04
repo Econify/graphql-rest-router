@@ -1,16 +1,13 @@
 import GraphQLRestRouter, { OpenApi } from 'graphql-rest-router';
 import SCHEMA from './schema';
 
-const { ENDPOINT } = process.env;
+const { ENDPOINT = '' } = process.env;
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
 const api = new GraphQLRestRouter(ENDPOINT, SCHEMA);
 
 const documentation = new OpenApi.V2({
   title: 'My REST API', // REQUIRED!
   version: '1.0.0',     // REQUIRED!
-
   host: 'http://localhost:4000',
   basePath: '/api',
 });

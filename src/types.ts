@@ -3,8 +3,6 @@ import { AxiosBasicCredentials, AxiosProxyConfig, AxiosInstance } from 'axios';
 import { DocumentNode } from 'graphql';
 import express from 'express';
 
-export default Router;
-
 export interface IGlobalConfiguration {
   cacheEngine?: ICacheEngine;
   defaultTimeoutInMs?: number;
@@ -98,9 +96,13 @@ export interface ILogger {
   debug: (message: string) => void;
 }
 
-export const enum LogLevel {
-  ERROR = 0,
-  WARN = 1,
-  INFO = 2,
-  DEBUG = 3,
+export type LogLevel = -1 | 0 | 1 | 2 | 3;
+
+export interface ILogLevels {
+  SILENT: LogLevel,
+  ERROR: LogLevel,
+  WARN: LogLevel,
+  INFO: LogLevel,
+  DEBUG: LogLevel,
 }
+

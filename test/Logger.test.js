@@ -1,6 +1,7 @@
 const { assert } = require('chai');
-const { mock, spy } = require('sinon');
+const { mock } = require('sinon');
 const Logger = require('../src/Logger').default;
+const LogLevels = require('../src/Logger').LogLevels;
 
 const loggerObject = {
   warn: () => undefined,
@@ -9,7 +10,7 @@ const loggerObject = {
   error: () => undefined
 }
 const logMessage = 'Test Message';
-const defaultLogLevel = 3;
+const defaultLogLevel = LogLevels.DEBUG;
 
 describe('Logger', () => {
   describe('#constructor', () => {
@@ -50,7 +51,7 @@ describe('Logger', () => {
       it('no ops with lower log level', () => {
         mockLogger.expects('info').never();
 
-        logger.setLogLevel(0);
+        logger.setLogLevel(LogLevels.ERROR);
         logger.info(logMessage);
 
         mockLogger.verify();
@@ -75,7 +76,7 @@ describe('Logger', () => {
       it('no ops with lower log level', () => {
         mockLogger.expects('warn').never();
 
-        logger.setLogLevel(0);
+        logger.setLogLevel(LogLevels.ERROR);
         logger.warn(logMessage);
 
         mockLogger.verify();
@@ -100,7 +101,7 @@ describe('Logger', () => {
       it('no ops with lower log level', () => {
         mockLogger.expects('debug').never();
 
-        logger.setLogLevel(0);
+        logger.setLogLevel(LogLevels.ERROR);
         logger.debug(logMessage);
 
         mockLogger.verify();
@@ -124,7 +125,7 @@ describe('Logger', () => {
       it('no ops with lower log level', () => {
         mockLogger.expects('error').never();
 
-        logger.setLogLevel(-1);
+        logger.setLogLevel(LogLevels.SILENT);
         logger.error(logMessage);
 
         mockLogger.verify();

@@ -7,7 +7,8 @@ import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { parse, DocumentNode, getOperationAST } from 'graphql';
 
 import Route from './Route';
-import { IGlobalConfiguration, IMountableItem, IConstructorRouteOptions, LogLevel } from './types';
+import { IGlobalConfiguration, IMountableItem, IConstructorRouteOptions } from './types';
+import { LogLevels } from './Logger';
 
 // TODO: Fix this in ts config and change to import
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -18,7 +19,7 @@ const DEFAULT_CONFIGURATION: IGlobalConfiguration = {
   logger: undefined,
   auth: undefined,
   proxy: undefined,
-  defaultLogLevel: LogLevel.ERROR,
+  defaultLogLevel: LogLevels.ERROR,
   defaultTimeoutInMs: 10000,
   defaultCacheTimeInMs: 0,
   autoDiscoverEndpoints: false,

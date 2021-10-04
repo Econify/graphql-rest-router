@@ -1,12 +1,12 @@
 {
   "name": "graphql-rest-router",
-  "version": "1.0.0-alpha.13",
+  "version": "1.0.0-alpha.14",
   "description": "",
-  "main": "./src/index.js",
-  "types": "./src/types.d.ts",
+  "main": "src/index.js",
+  "types": "src/index.d.ts",
   "scripts": {
     "lint": "eslint . --ext .ts",
-    "build": "tsc && cp ./package.json ./build/package.json",
+    "build": "tsc && cp ./package.json ./build/package.json && cp ./README.md ./build/README.md",
     "clean": "rm -rf build",
     "live-test": "bash ./example-consuming-client/build.sh",
     "clean-build": "npm run clean && npm run build",

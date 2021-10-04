@@ -94,7 +94,7 @@ export default class Router {
   mount(mountableItem: IMountableItem, options?: any): IMountableItem;
   mount(operationNameOrMountableItem: string | IMountableItem, options?: any): IMountableItem {
     if (typeof operationNameOrMountableItem === 'string') {
-      const { schema, axios, options: { logger, defaultLogLevel } } = this;
+      const { schema, axios, options: { logger, defaultLogLevel, cacheEngine, defaultCacheTimeInMs } } = this;
       const operationName = operationNameOrMountableItem;
 
       // eslint-disable-next-line no-extra-boolean-cast
@@ -104,11 +104,14 @@ export default class Router {
 
       const routeOptions: IConstructorRouteOptions = {
         ...options,
-
         operationName,
 
         axios,
         schema,
+
+        cacheEngine,
+        cacheTimeInMs: defaultCacheTimeInMs,
+
         logger,
         defaultLogLevel,
 

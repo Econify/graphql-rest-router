@@ -4,22 +4,24 @@ const STORE_EXPIRATION_CHECK_IN_MS = 10;
 const DEFAULT_CACHE_TIME_IN_MS = 10;
 
 export default class InMemoryCache implements ICacheEngine {
-  private store: { [key: string]: string|number|boolean } = {};
+  private store: { [key: string]: string } = {};
   private storeCacheExpiration: { [key: string]: number } = {};
 
   constructor() {
     this.monitorStoreForExpiredValues();
   }
 
-  get(key: string): string | number | boolean {
-    console.log('Getting in mem cache value');
+  public get(key: string): string {
     return this.store[key];
   }
 
-  set(key: string, value: string | number | boolean, cacheTimeInMs: number = DEFAULT_CACHE_TIME_IN_MS): void {
-    console.log('Setting in mem cache value');
+  public set(
+    key: string, value: string,
+    cacheTimeInMs: number = DEFAULT_CACHE_TIME_IN_MS
+  ): void {
     this.store[key] = value;
 
+    console.log(cacheTimeInMs);
     this.storeCacheExpiration[key] = new Date().getTime() + cacheTimeInMs;
   }
 

@@ -6,9 +6,11 @@ import { DocumentNode, parse, print, getOperationAST } from 'graphql';
 import { AxiosTransformer, AxiosInstance, AxiosRequestConfig } from 'axios';
 import * as express from 'express';
 
+import { createHash } from 'crypto';
+
 import {
   IMountableItem, IConstructorRouteOptions, IRouteOptions, LogLevel,
-  IOperationVariableMap, IOperationVariable, IResponse,
+  IOperationVariableMap, IOperationVariable, IResponse, ICacheEngine,
 }  from './types';
 
 import Logger from './Logger';
@@ -103,6 +105,7 @@ export default class Route implements IMountableItem {
   private defaultVariables: Record<string, unknown> = {};
 
   private cacheTimeInMs = 0;
+  private cacheEngine?: ICacheEngine;
 
   constructor(configuration: IConstructorRouteOptions) {
     this.configureRoute(configuration);
@@ -112,8 +115,7 @@ export default class Route implements IMountableItem {
     const {
       schema,
       operationName,
-      logger,
-      defaultLogLevel,
+
       ...options
     } = configuration;
 
@@ -131,10 +133,6 @@ export default class Route implements IMountableItem {
     }
 
     this.withOptions(options);
-
-    if (logger) {
-      this.logger = new Logger(logger, defaultLogLevel);
-    }
   }
 
   private filterHeadersForPassThrough(headers: IncomingHttpHeaders): IncomingHttpHeaders {
@@ -209,6 +207,9 @@ export default class Route implements IMountableItem {
       defaultVariables,
       staticVariables,
       cacheTimeInMs,
+      cacheEngine,
+      logger,
+      defaultLogLevel,
       passThroughHeaders,
     } = options;
 
@@ -224,16 +225,24 @@ export default class Route implements IMountableItem {
       passThroughHeaders.forEach(this.whitelistHeaderForPassThrough.bind(this));
     }
 
+    if (logger && typeof defaultLogLevel === 'number') {
+      this.logger = new Logger(logger, defaultLogLevel);
+    }
+
+    if (cacheTimeInMs) {
+      this.cacheTimeInMs = cacheTimeInMs;
+    }
+
+    if (cacheEngine) {
+      this.cacheEngine = cacheEngine;
+    }
+
     if (defaultVariables) {
       this.defaultVariables = defaultVariables;
     }
 
     if (staticVariables) {
       this.staticVariables = staticVariables;
-    }
-
-    if (cacheTimeInMs) {
-      this.cacheTimeInMs = cacheTimeInMs;
     }
 
     return this;
@@ -402,13 +411,54 @@ export default class Route implements IMountableItem {
       );
   }
 
+  private getRequestFingerprint(
+    operationName: string,
+    variables: Record<string, unknown>,
+    headers: Record<string, unknown>,
+  ) {
+    const hash = createHash('sha256');
+
+    hash.update(operationName);
+
+    Object.entries(variables).forEach((k, v) => hash.update(`${k}-${v}`));
+    Object.entries(headers).forEach((k, v) => hash.update(`${k}-${v}`));
+
+    return hash.digest('hex');
+  }
+
+  private async checkCache(fingerprint: string) {
+    if (this.cacheEngine) {
+      console.log('Checking cache...');
+      const cachedResult = await this.cacheEngine.get(fingerprint);
+
+      if (cachedResult) {
+        console.log('Cache hit! Returning data');
+        return {
+          statusCode: 200,
+          body: JSON.parse(cachedResult),
+        };
+      } else {
+        console.log('Cache miss');
+      }
+    }
+  }
+
   private async makeRequest(
     variables: Record<string, unknown>,
     headers: Record<string, unknown> = {}
   ): Promise<IResponse> {
     const { axios, schema, operationName, path } = this;
+    const fingerprint = this.getRequestFingerprint(operationName, variables, headers);
+    console.log(`Requests fingerprint is: ${fingerprint}`);
+
 
     this.logger && this.logger.info(`Incoming request on ${operationName} at ${path}, request variables: ${JSON.stringify(variables)}`);
+
+    const cachedResult = await this.checkCache(fingerprint);
+
+    if (cachedResult) {
+      return cachedResult;
+    }
 
     const config: AxiosRequestConfig = {
       data: {
@@ -434,6 +484,11 @@ export default class Route implements IMountableItem {
       data.errors && data.errors.length && data.errors.forEach((error: any) => {
         this.logger && this.logger.error(`Error in GraphQL response: ${JSON.stringify(error)}`);
       });
+
+      if (this.cacheEngine) {
+        console.log('Setting data for request', JSON.stringify(data));
+        this.cacheEngine.set(fingerprint, JSON.stringify(data), this.cacheTimeInMs);
+      }
 
       return <IResponse> { body: data, statusCode: status };
     } catch (error) {

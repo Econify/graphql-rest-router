@@ -25,6 +25,7 @@ export interface IConstructorRouteOptions {
   defaultLogLevel: LogLevel;
   path?: string;
   cacheTimeInMs?: number;
+  cacheEngine?: ICacheEngine;
   method?: string;
 
   passThroughHeaders?: string[];
@@ -35,7 +36,10 @@ export interface IConstructorRouteOptions {
 
 export interface IRouteOptions {
   path?: string;
+  logger?: ILogger;
+  defaultLogLevel?: LogLevel;
   cacheTimeInMs?: number;
+  cacheEngine?: ICacheEngine;
   method?: string;
   passThroughHeaders?: string[];
 
@@ -85,8 +89,8 @@ export interface IMountableItem {
 }
 
 export interface ICacheEngine {
-  get: (key: string, setFn?: () => string|number|boolean) => string|number|boolean;
-  set: (key: string, value: string|number|boolean) => void;
+  get: (key: string, setFn?: () => string) => string;
+  set: (key: string, value: string, cacheTimeInMs?: number) => void;
 }
 
 export interface ILogger {

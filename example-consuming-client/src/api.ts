@@ -4,7 +4,9 @@ import SCHEMA from './schema';
 const { ENDPOINT = '' } = process.env;
 
 const api = new GraphQLRestRouter(ENDPOINT, SCHEMA, {
-  cacheEngine: InMemoryCache,
+  cacheEngine: new InMemoryCache(),
+
+  defaultCacheTimeInMs: 3000,
 });
 
 const documentation = new OpenApi.V2({

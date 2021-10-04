@@ -1,32 +1,20 @@
 {
   "compilerOptions": {
-    "target": "es2016",
-    "outDir": "build/src",
-    "rootDir": "src/",
-    "moduleResolution": "node",
+    "lib": ["es2020"],
     "module": "commonjs",
-    "forceConsistentCasingInFileNames": true,
+    "target": "es2020",
+
+    "outDir": "build/src/",
+    "rootDir": "src/",
+    "strict": true,
+    "moduleResolution": "node",
     "noFallthroughCasesInSwitch": true,
     "noImplicitAny": false,
-    "noImplicitThis": true,
     "declaration": true,
     "declarationDir": "build/src/",
     "allowSyntheticDefaultImports": true,
     "allowUnreachableCode": false,
-    "allowJs": false,
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "es5",
-      "es6",
-      "es7",
-      "es2017.object",
-      "esnext",
-      "esnext.asynciterable"
-    ],
-    "typeRoots": [
-      "./node_modules/@types"
-    ],
+    "typeRoots": ["node_modules/@types"],
     "types": ["node", "jest"],
     "baseUrl": "./",
     "paths": {
@@ -34,12 +22,10 @@
     }
   },
   "include": [
-    "**/*.ts",
-    "**/*.graphql",
-    "package.json"
+    "src"
   ],
   "exclude": [
-    "node_modules/**",
+    "node_modules",
     "example-consuming-client",
     "test",
     "build"

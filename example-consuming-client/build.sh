@@ -14,8 +14,6 @@ else
     npm install
 fi
 
-npm run prepare
-
 echo '[***COMPLETED REST ROUTER BUILD***]'
 
 # build this example application

@@ -1,10 +1,13 @@
 {
   "compilerOptions": {
-    "target": "es2016",
-    "outDir": "./build/",
-    "rootDir": "./src/",
-    "moduleResolution": "node",
+    "lib": ["es2020"],
     "module": "commonjs",
+    "target": "es2020",
+
+    "outDir": "build",
+    "rootDir": "src",
+    "strict": true,
+    "moduleResolution": "node",
     "importHelpers": true,
     "inlineSourceMap": true,
     "strictNullChecks": true,
@@ -18,15 +21,6 @@
     "downlevelIteration": true,
     "allowUnreachableCode": false,
     "allowJs": false,
-    "lib": [
-      "dom",
-      "es5",
-      "es6",
-      "es7",
-      "es2017.object",
-      "esnext",
-      "esnext.asynciterable"
-    ],
     "typeRoots": [
       "./node_modules/@types"
     ],
@@ -37,10 +31,9 @@
     }
   },
   "include": [
-    "./**/*.ts",
-    "./**/*.graphql"
+    "*.ts",
   ],
   "exclude": [
-    "./node_modules/**",
+    "node_modules",
   ]
 }

@@ -1,19 +1,16 @@
 import 'module-alias/register';
+import * as express from 'express';
 
-import { createServer } from './server';
-import logger from './lib/logger';
-import { ConnectionError } from './lib/errors';
+import api from './api';
 
-export const app = async (): Promise<void> => {
-  try {
-    await createServer();
-  } catch (e) {
-    logger.error(e);
-    throw new ConnectionError();
-  }
+export const createServer = (): void => {
+  const app = express();
+  app.use('/api', api);
+  // eslint-disable-next-line
+  app.listen(4000, () => console.log('Server listening on port 4000'));
 };
 
 /* istanbul ignore next */
 if (require.main === module) {
-  app();
+  createServer();
 }

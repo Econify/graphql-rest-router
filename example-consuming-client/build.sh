@@ -2,7 +2,7 @@
 
 # Set current shell location to here so can be
 # run via parent npm run live-test or from current directory
-cd "$(dirname "$0")" || exit
+cd "$(dirname "$0")" || exit 1
 
 #  Build graphql rest router
 cd ../
@@ -29,7 +29,7 @@ fi
 echo 'Completed build'
 
 # build this example application
-cd example-consuming-client || exit
+cd example-consuming-client || exit 1
 
 if [ -d "node_modules" ]
 then

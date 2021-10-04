@@ -3,12 +3,10 @@
   "version": "0.0.0",
   "description": "",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "ISC",
   "main": "./build/index.js",
   "scripts": {
-    "lint": "eslint . --ext .ts",
-    "prettier": "prettier --config ./.prettierrc.json --write './src/*/**.ts'",
-    "clean": "rm -rf ./build ./coverage",
+    "clean": "rm -rf ./build",
     "build": "tsc",
     "start": "tsc-watch --onSuccess \"dotenv -- node ./build/index.js\""
   },
@@ -16,26 +14,13 @@
     "express": "^4.17.1",
     "graphql-rest-router": "file:../build",
     "module-alias": "^2.2.2",
-    "pino": "^6.7.0",
-    "pino-pretty": "^4.3.0",
     "tslib": "^2.0.3"
   },
   "devDependencies": {
     "@types/body-parser": "^1.19.0",
     "@types/express": "^4.17.8",
-    "@types/jest": "^26.0.14",
     "@types/node": "^14.11.2",
-    "@types/pino": "^6.3.3",
-    "@typescript-eslint/eslint-plugin": "^4.6.1",
-    "@typescript-eslint/parser": "^4.6.1",
     "dotenv-cli": "^4.0.0",
-    "eslint": "^7.12.1",
-    "eslint-plugin-import": "^2.22.1",
-    "husky": "^4.3.0",
-    "jest": "^26.6.3",
-    "lint-staged": "^10.5.1",
-    "prettier": "^2.1.2",
-    "ts-jest": "^26.4.3",
     "tsc-watch": "^4.2.9",
     "typescript": "^4.0.3"
   }

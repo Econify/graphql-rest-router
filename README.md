@@ -37,11 +37,11 @@ api.listen(3000, () => {
   - [KOA Usage](#usage-with-koa)
   - [Examples](#code-examples)
 
-# Overview
+## Overview
 
 GraphQL has gained adoption as a replacement to the conventional REST API and for good reason. Development Time/Time to Market are signficantly shortened when no longer requiring every application to build and maintain its own API.
 
-## Internal GraphQL API
+### Internal GraphQL API
 
 While GraphQL has gained traction recently, the majority of GraphQL endpoints are used internally and not distributed or endorsed for public use. Items such as authentication, permissions, priveleges and sometimes even performance on certain keys are not seen as primary concerns as the API is deemed "internal". Because of this, any exposure of your GraphQL server to the public internet exposes you to risk (e.g. DDOS by allowing unknown users to create their own non-performant queries, accidental exposure of sensitive data, etc).
 
@@ -79,7 +79,7 @@ api.listen(3000);
 
 See [Usage with Express](#usage-with-express) and read [Getting Started](#getting-started) to see all available options.
 
-## External GraphQL API
+### External GraphQL API
 
 When dealing with a publicly exposed GraphQL server that implements users and priveleges, the main benefit GraphQL Rest Client provides is caching. While implementing individual caches at a content-level with push-expiration in the GraphQL server is optimal, building these systems is laborous and isn't always prioritized in an MVP product. GraphQL Rest Client allows you to expose a GraphQL query as a REST endpoint with built-in cache management that is compatible with all CDNs and cache management layers (e.g. CloudFlare, Akamai, Varnish, etc).
 
@@ -102,11 +102,11 @@ and expose it as `http://www.youapiurl.com/user/:id`
 api.mount('UserById').at('/user/:id');
 ```
 
-# Documentation
+## Documentation
 
 GraphQL Rest Router is available via NPM as `graphql-rest-router` (`npm install graphql-rest-router`)
 
-## Getting Started
+### Getting Started
 
 GRR is still in alpha so the DSL may be subject to changes.
 
@@ -290,32 +290,34 @@ A list of options and their default values is below:
 | autoDiscoverEndpoints | boolean | false | When set to true, GQL Rest Router will scan the provided client schema you provide and automatically mount an endpoint for each operation name / named query |
 | optimizeQueryRequest | boolean | false | (BETA) When set to true, GQL Rest Router will split up the provided schema into the smallest fragment necessary to complete each request to the GraphQL server as opposed to sending the originally provided schema with each request|
 | headers | object | {} | Any headers provided here will be sent with each request to GraphQL. If headers are also set at the route level, they will be combined with these headers (Route Headers take priority over Global Headers) |
-| passThroughHeaders | array<string> | [] | An array of strings that indicate which headers to pass through from the request to GraphQL Rest Router to the GraphQL Server. (Example: ['x-context-jwt']) |
-| auth | [AxiosBasicCredentials](https://github.com/axios/axios/blob/master/index.d.ts#L9-L12) | null | If the GraphQL server is protected with basic auth provide the basic auth credentials here to allow GQL Rest Router to connect. (Example: { username: 'pesto', password: 'foobar' } |
-| proxy | [AxiosProxyConfig](https://github.com/axios/axios/blob/master/index.d.ts#L14-L22) | null | If a proxy is required to communicate with your GraphQL server from the server that GQL Rest Router is running on, provide it here. |
-| cacheEngine | [ICacheEngine](https://github.com/Econify/graphql-rest-router/blob/master/index.d.ts#L81-L84) | null | Either a cache engine that [ships default](#Caching) with GQL Rest Router or adheres to the [ICacheEngine interface](#Custom-Cache-Engine) |
+| passThroughHeaders | string[] | [] | An array of strings that indicate which headers to pass through from the request to GraphQL Rest Router to the GraphQL Server. (Example: ['x-context-jwt']) |
+| auth | [AxiosBasicCredentials](https://github.com/axios/axios/blob/76f09afc03fbcf392d31ce88448246bcd4f91f8c/index.d.ts#L9-L12) | null | If the GraphQL server is protected with basic auth provide the basic auth credentials here to allow GQL Rest Router to connect. (Example: { username: 'pesto', password: 'foobar' } |
+| proxy | [AxiosProxyConfig](https://github.com/axios/axios/blob/76f09afc03fbcf392d31ce88448246bcd4f91f8c/index.d.ts#L14-L22) | null | If a proxy is required to communicate with your GraphQL server from the server that GQL Rest Router is running on, provide it here. |
+| cacheEngine | [ICacheEngine](https://github.com/Econify/graphql-rest-router/blob/29cc328f23b8dd579a6f4af242266460e95e7d69/src/types.ts#L87-L90) | null | Either a cache engine that [ships default](#Caching) with GQL Rest Router or adheres to the [ICacheEngine interface](#Custom-Cache-Engine) |
+| logger | [ILogger](https://github.com/Econify/graphql-rest-router/blob/29cc328f23b8dd579a6f4af242266460e95e7d69/src/types.ts#L101-L107) | null | A logger object that implements info, warn, error, and debug methods |
+| defaultLogLevel | number | 0 | Default logger level for the logger object |
 
-## Logging
+### Logging
 
-GraphQL Rest Router is capable of logging incoming requests and errors. When creating your router, you may use a logger of your own choice. GraphQL Rest Router allows you to configure log levels. The logger parameter must implement [ILogger](https://github.com/Econify/graphql-rest-router/blob/master/index.d.ts#L92-L97), and is compatible with most standard logging libraries.
+GraphQL Rest Router is capable of logging incoming requests and errors. When creating your router, you may use a logger of your own choice. GraphQL Rest Router allows you to configure log levels. The logger parameter must implement [ILogger](https://github.com/Econify/graphql-rest-router/blob/29cc328f23b8dd579a6f4af242266460e95e7d69/src/types.ts#L101-L107), and is compatible with most standard logging libraries.
 
 ```js
-import GraphQLRestRouter from 'graphql-rest-router';
+import GraphQLRestRouter, { LogLevels } from 'graphql-rest-router';
 
 const api = new GraphQLRestRouter('http://localhost:1227', schema, {
   logger: console,
   defaultLogLevel: 0 // Log only errors
 });
 
-api.mount('CreateUser').setLogLevel(3); // Log everything
-api.mount('GetUser').setLogLevel(-1); // Silence
+api.mount('CreateUser').setLogLevel(LogLevels.DEBUG); // Log everything
+api.mount('GetUser').setLogLevel(LogLevels.SILENCE); // Silence
 ```
 
-## Caching
+### Caching
 
-GraphQL Rest Router ships with two cache interfaces stock and supports any number of custom or third party caching interfaces as long as they adhere to [ICacheEngine](https://github.com/Econify/graphql-rest-router/blob/master/index.d.ts#L81-L84)
+GraphQL Rest Router ships with two cache interfaces stock and supports any number of custom or third party caching interfaces as long as they adhere to [ICacheEngine](https://github.com/Econify/graphql-rest-router/blob/29cc328f23b8dd579a6f4af242266460e95e7d69/src/types.ts#L87-L90)
 
-### In Memory Cache
+#### In Memory Cache
 
 InMemoryCache stores your cached route data on your server in memory. This can be used in development or with low TTLs in order to prevent a [thundering herd](https://en.wikipedia.org/wiki/Thundering_herd_problem) however it is strongly discouraged to use this in production. In Memory caches have the ability to deplete your system's resources and take down your instance of GraphQLRestRouter.
 
@@ -334,21 +336,21 @@ api.mount('CreateUser')
 api.mount('GetUser', { cacheTimeInMs: 500 });
 ```
 
-### Redis Cache
+#### Redis Cache
 
 As of the time of this writing, a REDIS interface for GQL Rest Router is not yet available. Feel free to submit a PR.
 
-### Custom Cache Engine
+#### Custom Cache Engine
 
 If you have a unique cache situation, or use a cache that does not ship by default with GQL Rest Router, you may implement a custom cache as long as it adheres to the ICacheEngine interface.
 
 Simply said, provide an object that contains `get` and `set` functions. See `InMemoryCache.ts` as an example.
 
-## Swagger / Open API
+### Swagger / Open API
 
 As GraphQL Rest Router exposes your API with new routes that aren't covered by GraphQL's internal documentation or introspection queries, GraphQL Rest Router ships with support for Swagger (Open Api V2), Open API (V3) and API Blueprint (planned). When mounting a documentation on GraphQL Rest Router, it will automatically inspect all queries in the schema you provided and run an introspection query on your GraphQL server to dynamically assemble and document the types / endpoints.
 
-### Open API (Preferred)
+#### Open API (Preferred)
 
 ```js
 const { OpenApi } = require('graphql-rest-router');
@@ -366,7 +368,7 @@ const api = new GraphQLRestRouter('http://yourgraphqlendpoint', schema);
 api.mount(documentation).at('/docs/openapi');
 ```
 
-### Swagger
+#### Swagger
 
 ```js
 const { OpenApi } = require('graphql-rest-router');
@@ -384,15 +386,15 @@ const api = new GraphQLRestRouter('http://yourgraphqlendpoint', schema);
 api.mount(swaggerDocumentation).at('/docs/swagger');
 ```
 
-### API Blueprint
+#### API Blueprint
 
 Planned for V1 but not available in Alpha
 
-## Usage with Web Frameworks
+### Usage with Web Frameworks
 
 Currently GQL Rest Router only supports Express out of the box. Please submit a PR or an Issue if you would like to see GQL Rest Router support additional frameworks.
 
-### Usage with Express
+#### Usage with Express
 
 It is common to leverage GraphQL Rest Client on a server that is already delivering a website as opposed to standing up a net new server. To integrate with an existing express server, simply export GraphQL Rest Router as express using `.asExpressRouter()` instead of starting up a new server using `.listen(port)`.
 
@@ -419,7 +421,7 @@ app.use('/api', api); // MOUNTS GQL REST ROUTER ON :3000/api/* (e.g. :3000/api/u
 app.listen(3000);
 ```
 
-### Usage with KOA
+#### Usage with KOA
 
 As of the time of this writing, a KOA extension for GQL Rest Router is not available. Feel free to submit a PR.
 

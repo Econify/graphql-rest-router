@@ -9,8 +9,8 @@
     "lint": "eslint . --ext .ts",
     "prettier": "prettier --config ./.prettierrc.json --write './src/*/**.ts'",
     "clean": "rm -rf ./build ./coverage",
-    "build": "tsc --build ./tsconfig.build.json",
-    "start": "tsc-watch --build ./tsconfig.build.json --onSuccess \"dotenv -- node ./build/index.js\""
+    "build": "tsc",
+    "start": "tsc-watch --onSuccess \"dotenv -- node ./build/index.js\""
   },
   "dependencies": {
     "express": "^4.17.1",

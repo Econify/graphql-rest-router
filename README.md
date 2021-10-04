@@ -302,15 +302,15 @@ A list of options and their default values is below:
 GraphQL Rest Router is capable of logging incoming requests and errors. When creating your router, you may use a logger of your own choice. GraphQL Rest Router allows you to configure log levels. The logger parameter must implement [ILogger](https://github.com/Econify/graphql-rest-router/blob/29cc328f23b8dd579a6f4af242266460e95e7d69/src/types.ts#L101-L107), and is compatible with most standard logging libraries.
 
 ```js
-import GraphQLRestRouter from 'graphql-rest-router';
+import GraphQLRestRouter, { LogLevels } from 'graphql-rest-router';
 
 const api = new GraphQLRestRouter('http://localhost:1227', schema, {
   logger: console,
   defaultLogLevel: 0 // Log only errors
 });
 
-api.mount('CreateUser').setLogLevel(3); // Log everything
-api.mount('GetUser').setLogLevel(-1); // Silence
+api.mount('CreateUser').setLogLevel(LogLevels.DEBUG); // Log everything
+api.mount('GetUser').setLogLevel(LogLevels.SILENCE); // Silence
 ```
 
 ### Caching

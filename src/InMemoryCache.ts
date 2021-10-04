@@ -11,11 +11,13 @@ export default class InMemoryCache implements ICacheEngine {
     this.monitorStoreForExpiredValues();
   }
 
-  get(key: string): string|number|boolean {
+  get(key: string): string | number | boolean {
+    console.log('Getting in mem cache value');
     return this.store[key];
   }
 
-  set(key: string, value: string|number|boolean, cacheTimeInMs: number = DEFAULT_CACHE_TIME_IN_MS): void {
+  set(key: string, value: string | number | boolean, cacheTimeInMs: number = DEFAULT_CACHE_TIME_IN_MS): void {
+    console.log('Setting in mem cache value');
     this.store[key] = value;
 
     this.storeCacheExpiration[key] = new Date().getTime() + cacheTimeInMs;

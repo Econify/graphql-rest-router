@@ -13,6 +13,7 @@ export interface IGlobalConfiguration {
   optimizeQueryRequest?: boolean;
   headers?: Record<string, unknown>;
   passThroughHeaders?: string[];
+  cacheableHeaders?: string[];
   auth?: AxiosBasicCredentials;
   proxy?: AxiosProxyConfig;
 }
@@ -29,6 +30,7 @@ export interface IConstructorRouteOptions {
   method?: string;
 
   passThroughHeaders?: string[];
+  cacheableHeaders?: string[];
 
   staticVariables?: Record<string, unknown>;
   defaultVariables?: Record<string, unknown>;
@@ -42,6 +44,7 @@ export interface IRouteOptions {
   cacheEngine?: ICacheEngine;
   method?: string;
   passThroughHeaders?: string[];
+  cacheableHeaders?: string[];
 
   staticVariables?: Record<string, unknown>;
   defaultVariables?: Record<string, unknown>;

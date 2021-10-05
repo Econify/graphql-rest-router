@@ -94,7 +94,11 @@ export default class Router {
   mount(mountableItem: IMountableItem, options?: any): IMountableItem;
   mount(operationNameOrMountableItem: string | IMountableItem, options?: any): IMountableItem {
     if (typeof operationNameOrMountableItem === 'string') {
-      const { schema, axios, options: { logger, defaultLogLevel, cacheEngine, defaultCacheTimeInMs } } = this;
+      const {
+        schema,
+        axios,
+        options: { logger, defaultLogLevel, cacheEngine, defaultCacheTimeInMs, cacheableHeaders },
+      } = this;
       const operationName = operationNameOrMountableItem;
 
       // eslint-disable-next-line no-extra-boolean-cast
@@ -111,11 +115,12 @@ export default class Router {
 
         cacheEngine,
         cacheTimeInMs: defaultCacheTimeInMs,
+        cacheableHeaders: cacheableHeaders?.map(s => s.toLowerCase()),
 
         logger,
         defaultLogLevel,
 
-        passThroughHeaders,
+        passThroughHeaders: passThroughHeaders.map(s => s.toLowerCase()),
       };
 
       const graphQLRoute = new Route(routeOptions);

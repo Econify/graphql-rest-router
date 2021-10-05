@@ -330,21 +330,31 @@ const api = new GraphQLRestRouter('http://localhost:1227', schema, {
   defaultCacheTimeInMs: 300,
 });
 
-api.mount('CreateUser')
-  .disableCache();
-
-api.mount('GetUser', { cacheTimeInMs: 500 });
+api.mount('CreateUser').disableCache();
+api.mount('GetUser').setCacheTimeInMs(500);
 ```
 
 #### Redis Cache
 
-As of the time of this writing, a REDIS interface for GQL Rest Router is not yet available. Feel free to submit a PR.
+RedisCache stores your cached route data in an external Redis instance. This gives you the benefits of the above InMemoryCache with less risk of depleting the Rest Router system's resources. The RedisCache class accepts the [ClientOpts](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/f4b63e02370940350887eaa82ac976dc2ecbf313/types/redis/index.d.ts#L39) object type provided for connection onfiguration.
+
+```js
+import GraphQLRestRouter, { RedisCache } from 'graphql-rest-router';
+
+const api = new GraphQLRestRouter('http://localhost:1227', schema, {
+  cacheEngine: new RedisCache({ host: 'localhost', port: 6379 }),
+  defaultCacheTimeInMs: 300000, // 5 minutes
+});
+
+api.mount('CreateUser').disableCache();
+api.mount('GetUser').setCacheTimeInMs(500);
+```
 
 #### Custom Cache Engine
 
 If you have a unique cache situation, or use a cache that does not ship by default with GQL Rest Router, you may implement a custom cache as long as it adheres to the ICacheEngine interface.
 
-Simply said, provide an object that contains `get` and `set` functions. See `InMemoryCache.ts` as an example.
+Simply said, provide an object that contains `get` and `set` functions. See `InMemoryCache.ts` or `RedisCache.ts` as an example.
 
 ### Swagger / Open API
 

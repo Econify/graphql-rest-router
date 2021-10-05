@@ -366,6 +366,12 @@ export default class Route implements IMountableItem {
     return this;
   }
 
+  setCacheTimeInMs(cacheTimeInMs: number): this {
+    this.cacheTimeInMs = cacheTimeInMs;
+
+    return this;
+  }
+
   disableCache(): this {
     this.cacheTimeInMs = 0;
 
@@ -427,7 +433,7 @@ export default class Route implements IMountableItem {
   }
 
   private async checkCache(fingerprint: string) {
-    if (this.cacheEngine) {
+    if (this.cacheEngine && this.cacheTimeInMs !== 0) {
       const cachedResult = await this.cacheEngine.get(fingerprint);
 
       return cachedResult ? {
@@ -478,7 +484,7 @@ export default class Route implements IMountableItem {
         this.logger && this.logger.error(`Error in GraphQL response: ${JSON.stringify(error)}`);
       });
 
-      if (this.cacheEngine) {
+      if (this.cacheEngine && this.cacheTimeInMs !== 0) {
         this.logger && this.logger.debug('Cache miss, setting results');
         this.cacheEngine.set(fingerprint, JSON.stringify(data), this.cacheTimeInMs);
       }

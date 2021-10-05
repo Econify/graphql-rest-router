@@ -412,13 +412,13 @@ export default class Route implements IMountableItem {
   }
 
   private getRequestFingerprint(
-    operationName: string,
+    path: string,
     variables: Record<string, unknown>,
     headers: Record<string, unknown>,
   ) {
-    const hash = createHash('sha256');
+    const hash = createHash('sha1');
 
-    hash.update(operationName);
+    hash.update(path);
 
     Object.entries(variables).forEach((k, v) => hash.update(`${k}-${v}`));
     Object.entries(headers).forEach((k, v) => hash.update(`${k}-${v}`));
@@ -428,18 +428,12 @@ export default class Route implements IMountableItem {
 
   private async checkCache(fingerprint: string) {
     if (this.cacheEngine) {
-      console.log('Checking cache...');
       const cachedResult = await this.cacheEngine.get(fingerprint);
 
-      if (cachedResult) {
-        console.log('Cache hit! Returning data');
-        return {
-          statusCode: 200,
-          body: JSON.parse(cachedResult),
-        };
-      } else {
-        console.log('Cache miss');
-      }
+      return cachedResult ? {
+        statusCode: 200,
+        body: JSON.parse(cachedResult),
+      } : null;
     }
   }
 
@@ -448,15 +442,14 @@ export default class Route implements IMountableItem {
     headers: Record<string, unknown> = {}
   ): Promise<IResponse> {
     const { axios, schema, operationName, path } = this;
-    const fingerprint = this.getRequestFingerprint(operationName, variables, headers);
-    console.log(`Requests fingerprint is: ${fingerprint}`);
-
+    const fingerprint = this.getRequestFingerprint(path, variables, headers);
 
     this.logger && this.logger.info(`Incoming request on ${operationName} at ${path}, request variables: ${JSON.stringify(variables)}`);
 
     const cachedResult = await this.checkCache(fingerprint);
 
     if (cachedResult) {
+      this.logger && this.logger.debug('Cache hit');
       return cachedResult;
     }
 
@@ -486,7 +479,7 @@ export default class Route implements IMountableItem {
       });
 
       if (this.cacheEngine) {
-        console.log('Setting data for request', JSON.stringify(data));
+        this.logger && this.logger.debug('Cache miss, setting results');
         this.cacheEngine.set(fingerprint, JSON.stringify(data), this.cacheTimeInMs);
       }
 

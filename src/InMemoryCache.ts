@@ -1,7 +1,6 @@
 import { ICacheEngine } from './types';
 
 const STORE_EXPIRATION_CHECK_IN_MS = 10;
-const DEFAULT_CACHE_TIME_IN_MS = 10;
 
 export default class InMemoryCache implements ICacheEngine {
   private store: { [key: string]: string } = {};
@@ -11,17 +10,13 @@ export default class InMemoryCache implements ICacheEngine {
     this.monitorStoreForExpiredValues();
   }
 
-  public get(key: string): string {
+  get(key: string): string {
     return this.store[key];
   }
 
-  public set(
-    key: string, value: string,
-    cacheTimeInMs: number = DEFAULT_CACHE_TIME_IN_MS
-  ): void {
+  set(key: string, value: string, cacheTimeInMs = 0): void {
     this.store[key] = value;
 
-    console.log(cacheTimeInMs);
     this.storeCacheExpiration[key] = new Date().getTime() + cacheTimeInMs;
   }
 

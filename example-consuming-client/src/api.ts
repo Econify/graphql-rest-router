@@ -1,18 +1,13 @@
-import GraphQLRestRouter, { OpenApi, InMemoryCache } from 'graphql-rest-router';
+import GraphQLRestRouter, { OpenApi } from 'graphql-rest-router';
 import SCHEMA from './schema';
 
 const { ENDPOINT = '' } = process.env;
 
-const api = new GraphQLRestRouter(ENDPOINT, SCHEMA, {
-  cacheEngine: new InMemoryCache(),
-
-  defaultCacheTimeInMs: 3000,
-});
+const api = new GraphQLRestRouter(ENDPOINT, SCHEMA);
 
 const documentation = new OpenApi.V2({
   title: 'My REST API', // REQUIRED!
   version: '1.0.0',     // REQUIRED!
-
   host: 'http://localhost:4000',
   basePath: '/api',
 });

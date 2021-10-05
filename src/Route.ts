@@ -331,8 +331,6 @@ export default class Route implements IMountableItem {
       const assembledVariables = this.assembleVariables(providedVariables);
       const missingVariables = this.missingVariables(assembledVariables);
 
-      const headers = this.filterHeadersForPassThrough(req.headers);
-
       if (missingVariables.length) {
         res.json({
           error: 'Missing Variables',
@@ -342,7 +340,7 @@ export default class Route implements IMountableItem {
       }
 
       const { statusCode, body: responseBody } =
-        await this.makeRequest(assembledVariables, headers);
+        await this.makeRequest(assembledVariables, req.headers);
 
       res
         .status(statusCode)
@@ -461,9 +459,10 @@ export default class Route implements IMountableItem {
 
   private async makeRequest(
     variables: Record<string, unknown>,
-    headers: Record<string, unknown> = {}
+    headers: IncomingHttpHeaders = {}
   ): Promise<IResponse> {
     const { axios, schema, operationName, path } = this;
+    const headersForPassThrough = this.filterHeadersForPassThrough(headers);
     const fingerprint = this.getRequestFingerprint(path, variables, headers);
 
     this.logger && this.logger.info(`Incoming request on ${operationName} at ${path}, request variables: ${JSON.stringify(variables)}`);
@@ -482,7 +481,7 @@ export default class Route implements IMountableItem {
         operationName,
       },
 
-      headers,
+      headers: headersForPassThrough,
     };
 
     if (this.transformRequestFn.length) {

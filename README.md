@@ -287,7 +287,7 @@ A list of options and their default values is below:
 | --- | --- | --- | --- |
 | defaultCacheTimeInMs | number | 0 | If a cache engine has been provided use this as a default value for all routes and endpoints. If a route level cache time has been provided this value will be ignored |
 | defaultTimeoutInMs | number | 10000 | The amount of time to allow for a request to the GraphQL to wait before timing out an endpoint |
-| cacheHeaders | string[] | [] | HTTP Headers that identify unique requests to the cache layer. If these headers differ between requests, they will cache miss. Headers provided here must also be in passThroughHeaders. |
+| cacheHeaders | string[] | [] | HTTP Headers that identify unique requests to the cache layer. If these headers differ between requests, they will cache miss. |
 | autoDiscoverEndpoints | boolean | false | When set to true, GQL Rest Router will scan the provided client schema you provide and automatically mount an endpoint for each operation name / named query |
 | optimizeQueryRequest | boolean | false | (BETA) When set to true, GQL Rest Router will split up the provided schema into the smallest fragment necessary to complete each request to the GraphQL server as opposed to sending the originally provided schema with each request|
 | headers | object | {} | Any headers provided here will be sent with each request to GraphQL. If headers are also set at the route level, they will be combined with these headers (Route Headers take priority over Global Headers) |

@@ -30,7 +30,7 @@ describe('InMemoryCache', () => {
       assert.equal(cache.storeExpirationCheckInMs, 5000);
     });
 
-    it('expires values', () => {
+    it('expires values on interval', () => {
       const cacheTime = Math.floor(Math.random() + 19) + 1;
       const cache = new InMemoryCache(cacheTime);
 
@@ -42,7 +42,7 @@ describe('InMemoryCache', () => {
       assert.equal(value, null);
       assert.equal(cache.store[this.key], null)
       assert.equal(cache.storeCacheExpiration[this.key], null)
-    })
+    });
   });
 
   describe('#set', () => {
@@ -52,9 +52,19 @@ describe('InMemoryCache', () => {
       cache.set(this.key, this.value);
 
       assert.equal(cache.store[this.key], this.value);
-      assert.equal(typeof cache.storeCacheExpiration[this.key], 'number')
+      assert.equal(cache.storeCacheExpiration[this.key], new Date().getTime());
+    });
+
+    it('sets value expiration', () => {
+      const cache = new InMemoryCache();
+      const expirationTimeInMs = 1000;
+
+      cache.set(this.key, this.value, expirationTimeInMs);
+
+      assert.equal(cache.store[this.key], this.value);
+      assert.equal(cache.storeCacheExpiration[this.key], new Date().getTime() + expirationTimeInMs);
     })
-  })
+  });
 
   describe('#get', () => {
     it('gets a value from the memory cache', () => {
@@ -64,6 +74,6 @@ describe('InMemoryCache', () => {
       const result = cache.get(this.key);
 
       assert.equal(result, this.value);
-    })
-  })
+    });
+  });
 });

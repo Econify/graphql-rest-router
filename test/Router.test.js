@@ -1,7 +1,6 @@
 const fs = require('fs');
 const { assert } = require('chai');
 const sinon = require('sinon');
-const { parse } = require('graphql');
 
 const Router = require('../src/Router').default;
 const Route = require('../src/Route').default;

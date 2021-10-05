@@ -1,6 +1,6 @@
 # Welcome to the GraphQl Rest Router contributing guide
 
-Thank you for your interest in our project and it's continuing health and success!
+Thank you for your interest in our project and its continuing health!
 
 We at Econify take great pride in our craft and we love helping others build great systems.
 
@@ -33,21 +33,15 @@ Steps:
 
 2. Fork the repository.
 
-3. Install or update to **Node.js v16**. For more information, see [the development guide](contributing/development.md).
+3. Create a working branch and start with your changes!
 
-4. Create a working branch and start with your changes!
+4. Commit the changes once you are happy with them and self review.
 
-5. Commit the changes once you are happy with them and self review.
+5. Create a pull request and fill out all fields in the pull request template.
 
-6. Create a pull request.
-
-7. Link the pull request to the issue with a link in the title. For example:
+6. Link the pull request to the issue with a link in the title. For example:
  `Bugfix: Fix casing found Issue: [#${issueNumber}](https://github.com/Econify/graphql-rest-router/issues/${issueNumber})`.
 
-8. Add repo contributors as reviewers.
+7. Add repo contributors as reviewers.
 
-9. At our earliest convenience, the team will review the proposed changes. It is highly likely we will pose questions and request more information or even changes.
-
-
-MATT: MAKE PR TEMPLATE AND MENTION HERE
-
+8. At our earliest convenience, the team will review the proposed changes. It is highly likely we will pose questions and request more information or even changes.

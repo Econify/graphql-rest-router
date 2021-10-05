@@ -89,7 +89,7 @@ export interface IMountableItem {
 }
 
 export interface ICacheEngine {
-  get: (key: string, setFn?: () => string) => string | Promise<string | null>;
+  get: (key: string, setFn?: () => string) => string | null | Promise<string | null>;
   set: (key: string, value: string, cacheTimeInMs?: number) => void | Promise<void>;
 }
 

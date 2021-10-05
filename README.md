@@ -326,13 +326,14 @@ import GraphQLRestRouter, { InMemoryCache } from 'graphql-rest-router';
 
 const api = new GraphQLRestRouter('http://localhost:1227', schema, {
   cacheEngine: new InMemoryCache(),
-
   defaultCacheTimeInMs: 300,
 });
-
+ 
 api.mount('CreateUser').disableCache();
 api.mount('GetUser').setCacheTimeInMs(500);
 ```
+
+Note: By default the InMemoryCache expires the cache on a 10 millisecond interval. This is configurable via the constructor. E.g. `new InMemoryCache(5000)` will poll every 5 seconds instead of every 10 milliseconds.
 
 #### Redis Cache
 

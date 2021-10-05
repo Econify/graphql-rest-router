@@ -1,12 +1,15 @@
 import { ICacheEngine } from './types';
 
-const STORE_EXPIRATION_CHECK_IN_MS = 10;
-
 export default class InMemoryCache implements ICacheEngine {
   private store: { [key: string]: string } = {};
   private storeCacheExpiration: { [key: string]: number } = {};
+  private storeExpirationCheckInMs = 10;
 
-  constructor() {
+  constructor(storeExpirationCheckInMs?: number) {
+    if (storeExpirationCheckInMs) {
+      this.storeExpirationCheckInMs = storeExpirationCheckInMs;
+    }
+
     this.monitorStoreForExpiredValues();
   }
 
@@ -32,6 +35,6 @@ export default class InMemoryCache implements ICacheEngine {
           delete store[key];
         }
       });
-    }, STORE_EXPIRATION_CHECK_IN_MS);
+    }, this.storeExpirationCheckInMs);
   }
 }

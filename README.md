@@ -4,7 +4,7 @@ GraphQL Rest Router allows you to expose an internal GraphQL API as a REST API w
 
 ```js
 import GraphQLRestRouter from 'graphql-rest-router';
-const clientSchema = fs.require('./clientSchema.gql', 'utf-8');
+const clientSchema = fs.readFileSync('./clientSchema.gql', 'utf-8');
 
 const options = {
   defaultCacheTimeInMS: 10
@@ -152,7 +152,7 @@ Once you have your schema and your endpoint, usage is straight-forward:
 ```js
 import GraphQLRestRouter from 'graphql-rest-router';
 
-const schema = fs.readFile(`${__dirname}/schema.gql`);
+const schema = fs.readFileSync(`${__dirname}/schema.gql`, 'utf-8');
 const endpoint = 'http://mygraphqlserver.com:9000';
 
 const api = new GraphQLRestRouter(endpoint, schema);

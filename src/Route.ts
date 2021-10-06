@@ -106,7 +106,7 @@ export default class Route implements IMountableItem {
 
   private cacheTimeInMs = 0;
   private cacheEngine?: ICacheEngine;
-  private cacheHeaders: Set<string> = new Set();
+  private cacheKeyIncludedHeaders: Set<string> = new Set();
 
   constructor(configuration: IConstructorRouteOptions) {
     this.configureRoute(configuration);
@@ -152,7 +152,7 @@ export default class Route implements IMountableItem {
   }
 
   addCacheableHeader(header: string): this {
-    this.cacheHeaders.add(header.toLowerCase());
+    this.cacheKeyIncludedHeaders.add(header.toLowerCase());
 
     return this;
   }
@@ -218,7 +218,7 @@ export default class Route implements IMountableItem {
       logger,
       defaultLogLevel,
       passThroughHeaders,
-      cacheHeaders,
+      cacheKeyIncludedHeaders,
     } = options;
 
     if (path) {
@@ -233,8 +233,8 @@ export default class Route implements IMountableItem {
       passThroughHeaders.forEach(this.whitelistHeaderForPassThrough.bind(this));
     }
 
-    if (cacheHeaders) {
-      this.cacheHeaders = new Set(cacheHeaders);
+    if (cacheKeyIncludedHeaders) {
+      this.cacheKeyIncludedHeaders = new Set(cacheKeyIncludedHeaders);
     }
 
     if (logger && typeof defaultLogLevel === 'number') {
@@ -438,7 +438,7 @@ export default class Route implements IMountableItem {
 
     Object.entries(variables).forEach(([k, v]) => hash.update(`${k}-${v}`));
     Object.entries(headers).forEach(([k, v]) => {
-      if (this.cacheHeaders.has(k)) {
+      if (this.cacheKeyIncludedHeaders.has(k)) {
         hash.update(`${k}-${v}`);
       }
     });

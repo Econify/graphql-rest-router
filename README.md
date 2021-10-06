@@ -287,7 +287,7 @@ A list of options and their default values is below:
 | --- | --- | --- | --- |
 | defaultCacheTimeInMs | number | 0 | If a cache engine has been provided use this as a default value for all routes and endpoints. If a route level cache time has been provided this value will be ignored |
 | defaultTimeoutInMs | number | 10000 | The amount of time to allow for a request to the GraphQL to wait before timing out an endpoint |
-| cacheHeaders | string[] | [] | HTTP Headers that identify unique requests to the cache layer. If these headers differ between requests, they will cache miss. |
+| cacheKeyIncludedHeaders | string[] | [] | HTTP Headers that are used in the creation of the cache key for requests. This allows users to identify unique requests by specific headers. If these headers specified here differ between requests, they will be considered unique requests. |
 | autoDiscoverEndpoints | boolean | false | When set to true, GQL Rest Router will scan the provided client schema you provide and automatically mount an endpoint for each operation name / named query |
 | optimizeQueryRequest | boolean | false | (BETA) When set to true, GQL Rest Router will split up the provided schema into the smallest fragment necessary to complete each request to the GraphQL server as opposed to sending the originally provided schema with each request|
 | headers | object | {} | Any headers provided here will be sent with each request to GraphQL. If headers are also set at the route level, they will be combined with these headers (Route Headers take priority over Global Headers) |
@@ -318,9 +318,9 @@ api.mount('GetUser').setLogLevel(LogLevels.SILENCE); // Silence
 
 GraphQL Rest Router ships with two cache interfaces stock and supports any number of custom or third party caching interfaces as long as they adhere to [ICacheEngine](https://github.com/Econify/graphql-rest-router/blob/29cc328f23b8dd579a6f4af242266460e95e7d69/src/types.ts#L87-L90)
 
-*Important note about request headers*: by default GraphQL Rest Router does not differentiate cached requests on their HTTP headers. If your service gives different responses based on headers, you need to include them in the `cacheHeaders` global configuration option.
+*Important note about request headers*: by default GraphQL Rest Router does not differentiate cached requests on their HTTP headers. If your service gives different responses based on headers, you need to include them in the `cacheKeyIncludedHeaders` global configuration option.
 
-E.g. if your application supports `Authorization` headers, you must include that header in the `cacheHeaders` field so that the cache layer will not serve User A's result to User B. Alternatively, you can disable the cache on authorized routes.
+E.g. if your application supports `Authorization` headers, you must include that header in the `cacheKeyIncludedHeaders` field so that the cache layer will not serve User A's result to User B. Alternatively, you can disable the cache on authorized routes.
 
 #### In Memory Cache
 

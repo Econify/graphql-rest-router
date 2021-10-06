@@ -97,7 +97,7 @@ export default class Router {
       const {
         schema,
         axios,
-        options: { logger, defaultLogLevel, cacheEngine, defaultCacheTimeInMs, cacheHeaders },
+        options: { logger, defaultLogLevel, cacheEngine, defaultCacheTimeInMs, cacheKeyIncludedHeaders },
       } = this;
       const operationName = operationNameOrMountableItem;
 
@@ -115,7 +115,7 @@ export default class Router {
 
         cacheEngine,
         cacheTimeInMs: defaultCacheTimeInMs,
-        cacheHeaders: cacheHeaders?.map(s => s.toLowerCase()),
+        cacheKeyIncludedHeaders: cacheKeyIncludedHeaders?.map(s => s.toLowerCase()),
 
         logger,
         defaultLogLevel,

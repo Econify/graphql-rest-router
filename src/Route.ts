@@ -6,9 +6,11 @@ import { DocumentNode, parse, print, getOperationAST } from 'graphql';
 import { AxiosTransformer, AxiosInstance, AxiosRequestConfig } from 'axios';
 import * as express from 'express';
 
+import { createHash } from 'crypto';
+
 import {
   IMountableItem, IConstructorRouteOptions, IRouteOptions, LogLevel,
-  IOperationVariableMap, IOperationVariable, IResponse,
+  IOperationVariableMap, IOperationVariable, IResponse, ICacheEngine,
 }  from './types';
 
 import Logger from './Logger';
@@ -103,6 +105,8 @@ export default class Route implements IMountableItem {
   private defaultVariables: Record<string, unknown> = {};
 
   private cacheTimeInMs = 0;
+  private cacheEngine?: ICacheEngine;
+  private cacheKeyIncludedHeaders: Set<string> = new Set();
 
   constructor(configuration: IConstructorRouteOptions) {
     this.configureRoute(configuration);
@@ -112,8 +116,7 @@ export default class Route implements IMountableItem {
     const {
       schema,
       operationName,
-      logger,
-      defaultLogLevel,
+
       ...options
     } = configuration;
 
@@ -131,10 +134,6 @@ export default class Route implements IMountableItem {
     }
 
     this.withOptions(options);
-
-    if (logger) {
-      this.logger = new Logger(logger, defaultLogLevel);
-    }
   }
 
   private filterHeadersForPassThrough(headers: IncomingHttpHeaders): IncomingHttpHeaders {
@@ -152,8 +151,14 @@ export default class Route implements IMountableItem {
     return passThroughHeaders;
   }
 
+  addCacheableHeader(header: string): this {
+    this.cacheKeyIncludedHeaders.add(header.toLowerCase());
+
+    return this;
+  }
+
   whitelistHeaderForPassThrough(header: string): this {
-    this.passThroughHeaders.push(header);
+    this.passThroughHeaders.push(header.toLowerCase());
 
     return this;
   }
@@ -209,7 +214,11 @@ export default class Route implements IMountableItem {
       defaultVariables,
       staticVariables,
       cacheTimeInMs,
+      cacheEngine,
+      logger,
+      defaultLogLevel,
       passThroughHeaders,
+      cacheKeyIncludedHeaders,
     } = options;
 
     if (path) {
@@ -224,16 +233,28 @@ export default class Route implements IMountableItem {
       passThroughHeaders.forEach(this.whitelistHeaderForPassThrough.bind(this));
     }
 
+    if (cacheKeyIncludedHeaders) {
+      this.cacheKeyIncludedHeaders = new Set(cacheKeyIncludedHeaders);
+    }
+
+    if (logger && typeof defaultLogLevel === 'number') {
+      this.logger = new Logger(logger, defaultLogLevel);
+    }
+
+    if (cacheTimeInMs) {
+      this.cacheTimeInMs = cacheTimeInMs;
+    }
+
+    if (cacheEngine) {
+      this.cacheEngine = cacheEngine;
+    }
+
     if (defaultVariables) {
       this.defaultVariables = defaultVariables;
     }
 
     if (staticVariables) {
       this.staticVariables = staticVariables;
-    }
-
-    if (cacheTimeInMs) {
-      this.cacheTimeInMs = cacheTimeInMs;
     }
 
     return this;
@@ -310,8 +331,6 @@ export default class Route implements IMountableItem {
       const assembledVariables = this.assembleVariables(providedVariables);
       const missingVariables = this.missingVariables(assembledVariables);
 
-      const headers = this.filterHeadersForPassThrough(req.headers);
-
       if (missingVariables.length) {
         res.json({
           error: 'Missing Variables',
@@ -321,7 +340,7 @@ export default class Route implements IMountableItem {
       }
 
       const { statusCode, body: responseBody } =
-        await this.makeRequest(assembledVariables, headers);
+        await this.makeRequest(assembledVariables, req.headers);
 
       res
         .status(statusCode)
@@ -353,6 +372,12 @@ export default class Route implements IMountableItem {
 
   transformResponse(fn: AxiosTransformer): this {
     this.transformResponseFn.push(fn);
+
+    return this;
+  }
+
+  setCacheTimeInMs(cacheTimeInMs: number): this {
+    this.cacheTimeInMs = cacheTimeInMs;
 
     return this;
   }
@@ -402,13 +427,52 @@ export default class Route implements IMountableItem {
       );
   }
 
+  private getRequestFingerprint(
+    path: string,
+    variables: Record<string, unknown>,
+    headers: Record<string, unknown>,
+  ) {
+    const hash = createHash('sha1');
+
+    hash.update(path);
+
+    Object.entries(variables).forEach(([k, v]) => hash.update(`${k}-${v}`));
+    Object.entries(headers).forEach(([k, v]) => {
+      if (this.cacheKeyIncludedHeaders.has(k)) {
+        hash.update(`${k}-${v}`);
+      }
+    });
+
+    return hash.digest('hex');
+  }
+
+  private async checkCache(fingerprint: string) {
+    if (this.cacheEngine && this.cacheTimeInMs !== 0) {
+      const cachedResult = await this.cacheEngine.get(fingerprint);
+
+      return cachedResult ? {
+        statusCode: 200,
+        body: JSON.parse(cachedResult),
+      } : null;
+    }
+  }
+
   private async makeRequest(
     variables: Record<string, unknown>,
-    headers: Record<string, unknown> = {}
+    headers: IncomingHttpHeaders = {}
   ): Promise<IResponse> {
     const { axios, schema, operationName, path } = this;
+    const headersForPassThrough = this.filterHeadersForPassThrough(headers);
+    const fingerprint = this.getRequestFingerprint(path, variables, headers);
 
     this.logger && this.logger.info(`Incoming request on ${operationName} at ${path}, request variables: ${JSON.stringify(variables)}`);
+
+    const cachedResult = await this.checkCache(fingerprint);
+
+    if (cachedResult) {
+      this.logger && this.logger.debug('Cache hit');
+      return cachedResult;
+    }
 
     const config: AxiosRequestConfig = {
       data: {
@@ -417,7 +481,7 @@ export default class Route implements IMountableItem {
         operationName,
       },
 
-      headers,
+      headers: headersForPassThrough,
     };
 
     if (this.transformRequestFn.length) {
@@ -434,6 +498,11 @@ export default class Route implements IMountableItem {
       data.errors && data.errors.length && data.errors.forEach((error: any) => {
         this.logger && this.logger.error(`Error in GraphQL response: ${JSON.stringify(error)}`);
       });
+
+      if (this.cacheEngine && this.cacheTimeInMs !== 0) {
+        this.logger && this.logger.debug('Cache miss, setting results');
+        this.cacheEngine.set(fingerprint, JSON.stringify(data), this.cacheTimeInMs);
+      }
 
       return <IResponse> { body: data, statusCode: status };
     } catch (error) {

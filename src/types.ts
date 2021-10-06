@@ -13,6 +13,7 @@ export interface IGlobalConfiguration {
   optimizeQueryRequest?: boolean;
   headers?: Record<string, unknown>;
   passThroughHeaders?: string[];
+  cacheKeyIncludedHeaders?: string[];
   auth?: AxiosBasicCredentials;
   proxy?: AxiosProxyConfig;
 }
@@ -25,9 +26,11 @@ export interface IConstructorRouteOptions {
   defaultLogLevel: LogLevel;
   path?: string;
   cacheTimeInMs?: number;
+  cacheEngine?: ICacheEngine;
   method?: string;
 
   passThroughHeaders?: string[];
+  cacheKeyIncludedHeaders?: string[];
 
   staticVariables?: Record<string, unknown>;
   defaultVariables?: Record<string, unknown>;
@@ -35,9 +38,13 @@ export interface IConstructorRouteOptions {
 
 export interface IRouteOptions {
   path?: string;
+  logger?: ILogger;
+  defaultLogLevel?: LogLevel;
   cacheTimeInMs?: number;
+  cacheEngine?: ICacheEngine;
   method?: string;
   passThroughHeaders?: string[];
+  cacheKeyIncludedHeaders?: string[];
 
   staticVariables?: Record<string, unknown>;
   defaultVariables?: Record<string, unknown>;
@@ -85,8 +92,8 @@ export interface IMountableItem {
 }
 
 export interface ICacheEngine {
-  get: (key: string, setFn?: () => string|number|boolean) => string|number|boolean;
-  set: (key: string, value: string|number|boolean) => void;
+  get: (key: string, setFn?: () => string) => string | null | Promise<string | null>;
+  set: (key: string, value: string, cacheTimeInMs?: number) => void | Promise<void>;
 }
 
 export interface ILogger {

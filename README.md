@@ -287,6 +287,7 @@ A list of options and their default values is below:
 | --- | --- | --- | --- |
 | defaultCacheTimeInMs | number | 0 | If a cache engine has been provided use this as a default value for all routes and endpoints. If a route level cache time has been provided this value will be ignored |
 | defaultTimeoutInMs | number | 10000 | The amount of time to allow for a request to the GraphQL to wait before timing out an endpoint |
+| cacheKeyIncludedHeaders | string[] | [] | HTTP Headers that are used in the creation of the cache key for requests. This allows users to identify unique requests by specific headers. If these headers specified here differ between requests, they will be considered unique requests. |
 | autoDiscoverEndpoints | boolean | false | When set to true, GQL Rest Router will scan the provided client schema you provide and automatically mount an endpoint for each operation name / named query |
 | optimizeQueryRequest | boolean | false | (BETA) When set to true, GQL Rest Router will split up the provided schema into the smallest fragment necessary to complete each request to the GraphQL server as opposed to sending the originally provided schema with each request|
 | headers | object | {} | Any headers provided here will be sent with each request to GraphQL. If headers are also set at the route level, they will be combined with these headers (Route Headers take priority over Global Headers) |
@@ -317,6 +318,10 @@ api.mount('GetUser').setLogLevel(LogLevels.SILENCE); // Silence
 
 GraphQL Rest Router ships with two cache interfaces stock and supports any number of custom or third party caching interfaces as long as they adhere to [ICacheEngine](https://github.com/Econify/graphql-rest-router/blob/29cc328f23b8dd579a6f4af242266460e95e7d69/src/types.ts#L87-L90)
 
+*Important note about request headers*: by default GraphQL Rest Router does not differentiate cached requests on their HTTP headers. If your service gives different responses based on headers, you need to include them in the `cacheKeyIncludedHeaders` global configuration option.
+
+E.g. if your application supports `Authorization` headers, you must include that header in the `cacheKeyIncludedHeaders` field so that the cache layer will not serve User A's result to User B. Alternatively, you can disable the cache on authorized routes.
+
 #### In Memory Cache
 
 InMemoryCache stores your cached route data on your server in memory. This can be used in development or with low TTLs in order to prevent a [thundering herd](https://en.wikipedia.org/wiki/Thundering_herd_problem) however it is strongly discouraged to use this in production. In Memory caches have the ability to deplete your system's resources and take down your instance of GraphQLRestRouter.
@@ -326,25 +331,36 @@ import GraphQLRestRouter, { InMemoryCache } from 'graphql-rest-router';
 
 const api = new GraphQLRestRouter('http://localhost:1227', schema, {
   cacheEngine: new InMemoryCache(),
-
   defaultCacheTimeInMs: 300,
 });
-
-api.mount('CreateUser')
-  .disableCache();
-
-api.mount('GetUser', { cacheTimeInMs: 500 });
+ 
+api.mount('CreateUser').disableCache();
+api.mount('GetUser').setCacheTimeInMs(500);
 ```
+
+Note: By default the InMemoryCache expires the cache on a 10 millisecond interval. This is configurable via the constructor. E.g. `new InMemoryCache(5000)` will poll every 5 seconds instead of every 10 milliseconds.
 
 #### Redis Cache
 
-As of the time of this writing, a REDIS interface for GQL Rest Router is not yet available. Feel free to submit a PR.
+RedisCache stores your cached route data in an external Redis instance. This gives you the benefits of the above InMemoryCache with less risk of depleting the Rest Router system's resources. The RedisCache class accepts the [ClientOpts](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/f4b63e02370940350887eaa82ac976dc2ecbf313/types/redis/index.d.ts#L39) object type provided for connection onfiguration.
+
+```js
+import GraphQLRestRouter, { RedisCache } from 'graphql-rest-router';
+
+const api = new GraphQLRestRouter('http://localhost:1227', schema, {
+  cacheEngine: new RedisCache({ host: 'localhost', port: 6379 }),
+  defaultCacheTimeInMs: 300000, // 5 minutes
+});
+
+api.mount('CreateUser').disableCache();
+api.mount('GetUser').setCacheTimeInMs(500);
+```
 
 #### Custom Cache Engine
 
 If you have a unique cache situation, or use a cache that does not ship by default with GQL Rest Router, you may implement a custom cache as long as it adheres to the ICacheEngine interface.
 
-Simply said, provide an object that contains `get` and `set` functions. See `InMemoryCache.ts` as an example.
+Simply said, provide an object that contains `get` and `set` functions. See `InMemoryCache.ts` or `RedisCache.ts` as an example.
 
 ### Swagger / Open API
 

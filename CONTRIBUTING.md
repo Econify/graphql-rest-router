@@ -29,19 +29,17 @@ Rules:
 2. Update the [README.md](https://github.com/Econify/graphql-rest-router/blob/master/README.md) with each change in functionality.
 
 Steps:
-1. [Install Git LFS](https://docs.github.com/en/github/managing-large-files/versioning-large-files/installing-git-large-file-storage).
+1. Fork the repository.
 
-2. Fork the repository.
+2. Create a working branch and start with your changes!
 
-3. Create a working branch and start with your changes!
+3. Commit the changes once you are happy with them and self review.
 
-4. Commit the changes once you are happy with them and self review.
+4. Create a pull request and fill out all fields in the pull request template.
 
-5. Create a pull request and fill out all fields in the pull request template.
-
-6. Link the pull request to the issue with a link in the title. For example:
+5. Link the pull request to the issue with a link in the title. For example:
  `Bugfix: Fix casing found Issue: [#${issueNumber}](https://github.com/Econify/graphql-rest-router/issues/${issueNumber})`.
 
-7. Add repo contributors as reviewers.
+6. Add repo contributors as reviewers.
 
-8. At our earliest convenience, the team will review the proposed changes. It is highly likely we will pose questions and request more information or even changes.
+7. At our earliest convenience, the team will review the proposed changes. It is highly likely we will pose questions and request more information or even changes.

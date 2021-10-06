@@ -23,7 +23,7 @@ export interface IConstructorRouteOptions {
   operationName: string;
   axios: AxiosInstance;
   logger?: ILogger;
-  defaultLogLevel: LogLevel;
+  logLevel: LogLevel;
   path?: string;
   cacheTimeInMs?: number;
   cacheEngine?: ICacheEngine;
@@ -39,7 +39,7 @@ export interface IConstructorRouteOptions {
 export interface IRouteOptions {
   path?: string;
   logger?: ILogger;
-  defaultLogLevel?: LogLevel;
+  logLevel?: LogLevel;
   cacheTimeInMs?: number;
   cacheEngine?: ICacheEngine;
   method?: string;

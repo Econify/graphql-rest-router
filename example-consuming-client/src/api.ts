@@ -1,4 +1,4 @@
-import GraphQLRestRouter, { OpenApi } from 'graphql-rest-router';
+import GraphQLRestRouter, { InMemoryCache, OpenApi } from 'graphql-rest-router';
 import SCHEMA from './schema';
 
 const { ENDPOINT = '' } = process.env;
@@ -12,7 +12,10 @@ const documentation = new OpenApi.V2({
   basePath: '/api',
 });
 
-api.mount('GetCharacters').at('/characters/');
+api.mount('GetCharacters').at('/characters/').withOptions({
+  cacheEngine: new InMemoryCache(),
+  cacheTimeInMs: 5000,
+});
 api.mount('GetCharacterById').at('/characters/:id');
 
 api.mount('GetLocations').at('/locations').transformResponse(response => {

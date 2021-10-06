@@ -2,20 +2,20 @@
 
 Thank you for your interest in our project and its continuing health!
 
-We at Econify take great pride in our craft and we love helping others build great systems.
+We at Econify take great pride in our craft and love helping others build great systems.
 
 This document's purpose is to explain our conventions, expectations and procedure for contributing to this code base.
 
 ## Issues
 ### Creating a new issue
-If you have a feature request, see a discrepency in our documentation or have found a bug, we strongly encourage the community to help us better our library!
+If you have a feature request, see a discrepency in our documentation or have found a bug, we strongly encourage you to help us better our library!
 
 Before you create a ticket, navigate to our [issues](https://github.com/Econify/graphql-rest-router/issues) page and ensure that there is not an existing ticket already filed.
 
-If this is a unique ticket, please create a new feature or bug ticket from our templates -- ensuring that all the following areas are covered with enough detail to action.
+If none are found, please create a new feature or bug ticket from our templates -- ensuring that all the following areas are covered with enough detail to action.
 
 Please note:
-* We at Econify operate under the premise of "Do no harm" -- Please be respectful of all community members and keep our environment collaborative, safe and suitable for all.
+* We at Econify operate under the premise of "Do no harm". Please be respectful of all community members and keep our environment collaborative, safe and suitable for all.
 
 * We will read and consider each issue filed but we cannot accomodate all requests.
 

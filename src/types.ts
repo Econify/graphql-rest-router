@@ -28,10 +28,8 @@ export interface IConstructorRouteOptions {
   cacheTimeInMs?: number;
   cacheEngine?: ICacheEngine;
   method?: string;
-
   passThroughHeaders?: string[];
   cacheKeyIncludedHeaders?: string[];
-
   staticVariables?: Record<string, unknown>;
   defaultVariables?: Record<string, unknown>;
 }
@@ -45,7 +43,6 @@ export interface IRouteOptions {
   method?: string;
   passThroughHeaders?: string[];
   cacheKeyIncludedHeaders?: string[];
-
   staticVariables?: Record<string, unknown>;
   defaultVariables?: Record<string, unknown>;
 }

@@ -298,6 +298,8 @@ A list of options and their default values is below:
 | logger | [ILogger](https://github.com/Econify/graphql-rest-router/blob/29cc328f23b8dd579a6f4af242266460e95e7d69/src/types.ts#L101-L107) | null | A logger object that implements info, warn, error, and debug methods |
 | defaultLogLevel | number | 0 | Default logger level for the logger object |
 
+Routes can be individually configured using the `withOptions` or `withOption` methods. See examples below.
+
 ### Logging
 
 GraphQL Rest Router is capable of logging incoming requests and errors. When creating your router, you may use a logger of your own choice. GraphQL Rest Router allows you to configure log levels. The logger parameter must implement [ILogger](https://github.com/Econify/graphql-rest-router/blob/29cc328f23b8dd579a6f4af242266460e95e7d69/src/types.ts#L101-L107), and is compatible with most standard logging libraries.
@@ -310,8 +312,8 @@ const api = new GraphQLRestRouter('http://localhost:1227', schema, {
   defaultLogLevel: 0 // Log only errors
 });
 
-api.mount('CreateUser').setLogLevel(LogLevels.DEBUG); // Log everything
-api.mount('GetUser').setLogLevel(LogLevels.SILENCE); // Silence
+api.mount('CreateUser').withOption('logLevel', LogLevels.DEBUG); // Log everything
+api.mount('GetUser').withOption('logLevel', LogLevels.SILENCE); // No logs
 ```
 
 ### Caching
@@ -328,14 +330,15 @@ InMemoryCache stores your cached route data on your server in memory. This can b
 
 ```js
 import GraphQLRestRouter, { InMemoryCache } from 'graphql-rest-router';
+import CustomCache from ...;
 
 const api = new GraphQLRestRouter('http://localhost:1227', schema, {
   cacheEngine: new InMemoryCache(),
   defaultCacheTimeInMs: 300,
 });
  
-api.mount('CreateUser').disableCache();
-api.mount('GetUser').setCacheTimeInMs(500);
+api.mount('CreateUser').withOption('cacheTimeInMs', 0); // Disable the cache on this route
+api.mount('GetUser').withOption('cacheEngine', new CustomCache()); // Use a different cache engine
 ```
 
 Note: By default the InMemoryCache expires the cache on a 10 millisecond interval. This is configurable via the constructor. E.g. `new InMemoryCache(5000)` will poll every 5 seconds instead of every 10 milliseconds.
@@ -352,15 +355,15 @@ const api = new GraphQLRestRouter('http://localhost:1227', schema, {
   defaultCacheTimeInMs: 300000, // 5 minutes
 });
 
-api.mount('CreateUser').disableCache();
-api.mount('GetUser').setCacheTimeInMs(500);
+api.mount('CreateUser').withOption('cacheTimeInMs', 0); // Disable the cache on this route
+api.mount('GetUser').withOption('cacheTimeInMs', 500); // Override 5 minute cache
 ```
 
 #### Custom Cache Engine
 
-If you have a unique cache situation, or use a cache that does not ship by default with GQL Rest Router, you may implement a custom cache as long as it adheres to the ICacheEngine interface.
+If you have a unique cache situation, or use a cache that does not ship by default with GQL Rest Router, you may implement a custom cache as long as it adheres to the [ICacheEngine](https://github.com/Econify/graphql-rest-router/blob/af05660d53ee74df10ccc85c9fdc958eec09ff71/src/types.ts#L94-L97) interface.
 
-Simply said, provide an object that contains `get` and `set` functions. See `InMemoryCache.ts` or `RedisCache.ts` as an example.
+Simply said, provide an object that contains `get` and `set` functions. See `InMemoryCache.ts` or `RedisCache.ts` as examples.
 
 ### Swagger / Open API
 
@@ -404,7 +407,7 @@ api.mount(swaggerDocumentation).at('/docs/swagger');
 
 #### API Blueprint
 
-Planned for V1 but not available in Alpha
+Not supported yet, please create a PR!
 
 ### Usage with Web Frameworks
 
@@ -443,4 +446,4 @@ As of the time of this writing, a KOA extension for GQL Rest Router is not avail
 
 ### Code Examples
 
-See the [examples folder](/examples) in this repo for code examples.
+See the [example client](/example-consuming-client) in this repo for code examples.

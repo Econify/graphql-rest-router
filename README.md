@@ -14,7 +14,7 @@ const api = new GraphQLRestRouter('http://graphqlurl.com', clientSchema, options
 
 api.mount('SearchUsers').at('/users');
 api.mount('GetUserById').at('/users/:id');
-api.mount('CreateUser').at('/users').as('post').disableCache();
+api.mount('CreateUser').at('/users').as('post').withOption('cacheTimeInMs', 0);
 
 api.listen(3000, () => {
   console.log('GraphQL Rest Router is listening!');

@@ -173,7 +173,7 @@ const api = new GraphQLRestRouter(endpoint, schema);
 api.mount('OperationName'); // Mounts "query OperationName" as "GET /OperationName"
 ```
 
-#### GET / POST
+#### HTTP Methods
 
 By default, mounted queries are GET requests. If you'd like to change that you may specify any http method using `.as()` on a route.
 
@@ -298,7 +298,22 @@ A list of options and their default values is below:
 | logger | [ILogger](https://github.com/Econify/graphql-rest-router/blob/29cc328f23b8dd579a6f4af242266460e95e7d69/src/types.ts#L101-L107) | null | A logger object that implements info, warn, error, and debug methods |
 | defaultLogLevel | number | 0 | Default logger level for the logger object |
 
-Routes can be individually configured using the `withOptions` or `withOption` methods. See examples below.
+Routes can be individually configured using the `withOptions` or `withOption` methods. See more usage examples below.
+
+```js
+import GraphQLRestRouter, { LogLevels, InMemoryCache } from 'graphql-rest-router';
+
+const api = new GraphQLRestRouter('http://localhost:1227', schema);
+
+// Set individual option
+api.mount('CreateUser').withOption('cacheEngine', new InMemoryCache());
+
+// Set two options with one function call
+api.mount('GetUser').withOptions({
+  logger: console,
+  logLevel: LogLevels.DEBUG,
+});
+```
 
 ### Logging
 

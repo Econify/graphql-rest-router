@@ -405,6 +405,8 @@ export default class Route implements IMountableItem {
   }
 
   private optionsDeprecationWarning(methodName: string) {
+    /* Use console.warn instead of this.logger.warn
+     * so it always logs the warning regardless of logger configuration */
     console.warn(`Deprecated method ${methodName}() called. This function will be removed in a later version, please use withOption() or withOptions() instead.`);
   }
 

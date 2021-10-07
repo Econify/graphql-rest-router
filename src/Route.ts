@@ -310,6 +310,7 @@ export default class Route implements IMountableItem {
       case 'path':
         return this.at(value);
       case 'httpMethod':
+      case 'method':
         return this.as(value);
       case 'passThroughHeaders':
         return this.addPassThroughHeaders(value);

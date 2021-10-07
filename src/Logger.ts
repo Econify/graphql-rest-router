@@ -16,12 +16,14 @@ export default class Logger implements ILogger {
     return level <= this.logLevel;
   }
 
-  public setLogLevel(level: LogLevel): void {
+  public setLogLevel(level: LogLevel): this {
     this.logLevel = level;
+    return this;
   }
 
-  public setLoggerObject(loggerObject: ILogger): void {
+  public setLoggerObject(loggerObject: ILogger): this {
     this.loggerObject = loggerObject;
+    return this;
   }
 
   public debug(message: string): void {

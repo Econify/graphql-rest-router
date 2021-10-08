@@ -28,7 +28,7 @@ const DEFAULT_CONFIGURATION: IGlobalConfiguration = {
 };
 
 export default class Router {
-  private schema: DocumentNode;
+  private schema?: DocumentNode;
   private options: IGlobalConfiguration;
 
   public routes: Route[] = [];
@@ -37,7 +37,7 @@ export default class Router {
 
   private passThroughHeaders: string[] = [];
 
-  constructor(public endpoint: string, schema: string, assignedConfiguration?: IGlobalConfiguration) {
+  constructor(public endpoint: string, schema?: string, assignedConfiguration?: IGlobalConfiguration) {
     const {
       auth,
       proxy,
@@ -65,8 +65,11 @@ export default class Router {
       responseType: 'json',
     };
 
-    this.schema = parse(schema);
     this.axios = axios.create(axiosConfig);
+
+    if (schema) {
+      this.schema = parse(schema);
+    }
 
     if (passThroughHeaders) {
       this.passThroughHeaders = passThroughHeaders;
@@ -78,6 +81,12 @@ export default class Router {
   private queryForOperation(operationName: string) {
     const { schema, options } = this;
     const { optimizeQueryRequest } = options;
+
+    if (!schema) {
+      console.warn('optimizeQueryRequest has no effect when not using schema');
+
+      return schema;
+    }
 
     if (optimizeQueryRequest) {
       console.warn(
@@ -100,7 +109,8 @@ export default class Router {
         axios,
         options: { logger, defaultLogLevel, cacheEngine, defaultCacheTimeInMs, cacheKeyIncludedHeaders },
       } = this;
-      const isOperationName = Boolean(getOperationAST(defaultSchema, operationOrMountableItem));
+      const isOperationName = defaultSchema &&
+        Boolean(getOperationAST(defaultSchema, operationOrMountableItem));
       const operationName = isOperationName ? operationOrMountableItem : undefined;
       const schema = isOperationName ? defaultSchema : parse(operationOrMountableItem);
 

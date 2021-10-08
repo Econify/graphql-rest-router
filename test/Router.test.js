@@ -1,6 +1,7 @@
 const fs = require('fs');
 const { assert } = require('chai');
 const sinon = require('sinon');
+const { parse } = require('graphql');
 
 const Router = require('../src/Router').default;
 const Route = require('../src/Route').default;
@@ -15,14 +16,12 @@ describe('Router', () => {
       let router;
 
       beforeEach(() => {
-        router = new Router(endpoint, schema);
+        router = new Router(endpoint);
       });
 
       it('should set cache time to 0', () => {
         assert.equal(router.options.defaultCacheTimeInMs, 0);
       });
-
-      it ('should set the cache engine to in memory', () => {});
 
       it('should not optimize the request be default', () => {
         assert.equal(router.options.optimizeQueryRequest, false);
@@ -35,6 +34,36 @@ describe('Router', () => {
   });
 
   describe('#mount', () => {
+    describe('schemaless mount', () => {
+      let router;
+      let spy;
+
+      beforeEach(() => {
+        router = new Router(endpoint);
+        spy = sinon.spy(Route.prototype, 'configureRoute');
+      });
+
+      afterEach(() => {
+        Route.prototype.configureRoute.restore();
+      });
+
+      function getMountedOperationDetails() {
+        const { operationName, schema } = Route.prototype.configureRoute.getCall(0).args[0];
+
+        return { operationName, schema };
+      }
+
+      it('should parse nameless inline operation', () => {
+        const inlineQuery = '{ users { id displayName } }';
+        router.mount(inlineQuery);
+
+        const { operationName, schema } = getMountedOperationDetails();
+
+        assert.equal(operationName, undefined);
+        assert.deepEqual(schema, parse(inlineQuery))
+      });
+    });
+
     describe('argument overloading', () => {
       const operationName = 'GetUserById';
       const defaultLogLevel = 3;

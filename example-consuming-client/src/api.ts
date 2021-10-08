@@ -3,7 +3,7 @@ import SCHEMA from './schema';
 
 const { ENDPOINT = '' } = process.env;
 
-const api = new GraphQLRestRouter(ENDPOINT, SCHEMA);
+const api = new GraphQLRestRouter(ENDPOINT, SCHEMA, { optimizeQueryRequest: true });
 
 const documentation = new OpenApi.V2({
   title: 'My REST API', // REQUIRED!
@@ -30,7 +30,7 @@ api.mount('GetLocations').at('/locations').transformResponse(response => {
 
 api.mount('GetLocationById').at('/locations/:id');
 
-api.mount('GetEpisodes').at('episodes');
+api.mount('GetEpisodes').at('episodes'); // .withOptions({ optimizeQueryRequest: true });
 api.mount('GetEpisodeById').at('episodes/:id');
 
 api.mount(documentation).at('/docs/openapi');

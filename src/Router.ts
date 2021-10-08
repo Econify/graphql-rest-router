@@ -121,10 +121,10 @@ export default class Router {
 
       const routeOptions: IConstructorRouteOptions = {
         ...options,
-        schema,
         operationName,
 
         axios,
+        schema,
         cacheEngine,
         cacheTimeInMs: defaultCacheTimeInMs,
         cacheKeyIncludedHeaders: cacheKeyIncludedHeaders?.map(s => s.toLowerCase()),

@@ -100,7 +100,7 @@ export default class Router {
   }
 
   mount(operationName: string, options?: any): Route;
-  mount(operation: string, options?: any): Route;
+  mount(inlineOperation: string, options?: any): Route;
   mount(mountableItem: IMountableItem, options?: any): IMountableItem;
   mount(operationOrMountableItem: string | IMountableItem, options?: any): IMountableItem {
     if (typeof operationOrMountableItem === 'string') {

@@ -91,15 +91,18 @@ export default class Router {
   }
 
   mount(operationName: string, options?: any): Route;
+  mount(operation: string, options?: any): Route;
   mount(mountableItem: IMountableItem, options?: any): IMountableItem;
-  mount(operationNameOrMountableItem: string | IMountableItem, options?: any): IMountableItem {
-    if (typeof operationNameOrMountableItem === 'string') {
+  mount(operationOrMountableItem: string | IMountableItem, options?: any): IMountableItem {
+    if (typeof operationOrMountableItem === 'string') {
       const {
-        schema,
+        schema: defaultSchema,
         axios,
         options: { logger, defaultLogLevel, cacheEngine, defaultCacheTimeInMs, cacheKeyIncludedHeaders },
       } = this;
-      const operationName = operationNameOrMountableItem;
+      const isOperationName = Boolean(getOperationAST(defaultSchema, operationOrMountableItem));
+      const operationName = isOperationName ? operationOrMountableItem : undefined;
+      const schema = isOperationName ? defaultSchema : parse(operationOrMountableItem);
 
       // eslint-disable-next-line no-extra-boolean-cast
       const passThroughHeaders = Boolean(options)
@@ -108,11 +111,10 @@ export default class Router {
 
       const routeOptions: IConstructorRouteOptions = {
         ...options,
+        schema,
         operationName,
 
         axios,
-        schema,
-
         cacheEngine,
         cacheTimeInMs: defaultCacheTimeInMs,
         cacheKeyIncludedHeaders: cacheKeyIncludedHeaders?.map(s => s.toLowerCase()),
@@ -130,7 +132,7 @@ export default class Router {
       return graphQLRoute;
     }
 
-    const mountedItem = operationNameOrMountableItem.withOptions(options);
+    const mountedItem = operationOrMountableItem.withOptions(options);
 
     if (mountedItem.onMount) {
       mountedItem.onMount(this);

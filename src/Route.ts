@@ -83,7 +83,7 @@ export default class Route implements IMountableItem {
 
   public passThroughHeaders: string[] = [];
   public operationVariables!: IOperationVariableMap;
-  public operationName!: string;
+  public operationName?: string;
 
   // TODO:
   // The route should be frozen on any type of export
@@ -196,7 +196,7 @@ export default class Route implements IMountableItem {
     return variableMap;
   }
 
-  private setOperationName(operationName: string): void {
+  private setOperationName(operationName?: string): void {
     const operation = getOperationAST(this.schema, operationName);
 
     if (!operation) {

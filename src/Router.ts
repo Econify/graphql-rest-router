@@ -7,6 +7,7 @@ import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { parse, DocumentNode, getOperationAST } from 'graphql';
 
 import Route from './Route';
+import traverseAndBuildOptimizedQuery from './traverseAndBuildOptimizedQuery';
 import { IGlobalConfiguration, IMountableItem, IConstructorRouteOptions } from './types';
 import { LogLevels } from './Logger';
 
@@ -89,11 +90,11 @@ export default class Router {
     }
 
     if (optimizeQueryRequest) {
-      console.warn(
-        'optimizeQueryRequest is a beta feature. It does not work with fragments'
-      );
-
-      return getOperationAST(schema, operationName);
+      try {
+        return traverseAndBuildOptimizedQuery(schema, operationName);
+      } catch (e) {
+        console.error('Failed to build optimized schema', e);
+      }
     }
 
     return schema;
@@ -112,7 +113,9 @@ export default class Router {
       const isOperationName = defaultSchema &&
         Boolean(getOperationAST(defaultSchema, operationOrMountableItem));
       const operationName = isOperationName ? operationOrMountableItem : undefined;
-      const schema = isOperationName ? defaultSchema : parse(operationOrMountableItem);
+      const schema = isOperationName ?
+        this.queryForOperation(operationOrMountableItem) :
+        parse(operationOrMountableItem);
 
       // eslint-disable-next-line no-extra-boolean-cast
       const passThroughHeaders = Boolean(options)
@@ -127,12 +130,12 @@ export default class Router {
         schema,
         cacheEngine,
         cacheTimeInMs: defaultCacheTimeInMs,
-        cacheKeyIncludedHeaders: cacheKeyIncludedHeaders?.map(s => s.toLowerCase()),
+        cacheKeyIncludedHeaders,
 
         logger,
-        defaultLogLevel,
+        logLevel: defaultLogLevel,
 
-        passThroughHeaders: passThroughHeaders.map(s => s.toLowerCase()),
+        passThroughHeaders,
       };
 
       const graphQLRoute = new Route(routeOptions);

@@ -18,13 +18,7 @@ else
     npm install
 fi
 
-if [ -d "build" ]
-then
-    echo "Build exists, skipping"
-else
-    echo "Building..."
-    npm run build
-fi
+npm run build
 
 echo 'Completed build'
 

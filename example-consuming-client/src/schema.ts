@@ -14,27 +14,16 @@ const schema = `
     # created
   }
 
-  fragment episode on Episode {
-    id
-    name
-    # air_date
-    # episode
-    # created
-    # characters {
-    #   name
-    # }
-  }
-
   fragment character on Character {
     id
     name
+    origin {
+      ...location
+    }
     # status
     # species
     # type
     # gender
-    # origin {
-    #   ...location
-    # }
     # location {
     #   ...location
     # }
@@ -43,6 +32,17 @@ const schema = `
     #   ...episode
     # }
     # created
+  }
+
+  fragment episode on Episode {
+    id
+    name
+    air_date
+    episode
+    created
+    characters {
+      ...character
+    }
   }
 
   # "id": "1"

@@ -9,42 +9,43 @@ export const LogLevels: ILogLevels = {
 };
 
 export default class Logger implements ILogger {
-  private loggerObject: ILogger;
-  private logLevel: LogLevel;
-
-  constructor(loggerObject: ILogger, logLevel: LogLevel) {
-    this.loggerObject = loggerObject;
-    this.logLevel = logLevel;
-  }
+  private loggerObject?: ILogger;
+  private logLevel: LogLevel = LogLevels.INFO;
 
   private shouldLog(level: LogLevel) {
     return level <= this.logLevel;
   }
 
-  public setLogLevel(level: LogLevel): void {
+  public setLogLevel(level: LogLevel): this {
     this.logLevel = level;
+    return this;
+  }
+
+  public setLoggerObject(loggerObject: ILogger): this {
+    this.loggerObject = loggerObject;
+    return this;
   }
 
   public debug(message: string): void {
-    if (this.shouldLog(LogLevels.DEBUG)) {
+    if (this.loggerObject && this.shouldLog(LogLevels.DEBUG)) {
       this.loggerObject.debug(message);
     }
   }
 
   public info(message: string): void {
-    if (this.shouldLog(LogLevels.INFO)) {
+    if (this.loggerObject && this.shouldLog(LogLevels.INFO)) {
       this.loggerObject.info(message);
     }
   }
 
   public warn(message: string): void {
-    if (this.shouldLog(LogLevels.WARN)) {
+    if (this.loggerObject && this.shouldLog(LogLevels.WARN)) {
       this.loggerObject.warn(message);
     }
   }
 
   public error(message: string): void {
-    if (this.shouldLog(LogLevels.ERROR)) {
+    if (this.loggerObject && this.shouldLog(LogLevels.ERROR)) {
       this.loggerObject.error(message);
     }
   }

@@ -23,15 +23,13 @@ export interface IConstructorRouteOptions {
   operationName?: string;
   axios: AxiosInstance;
   logger?: ILogger;
-  defaultLogLevel: LogLevel;
+  logLevel: LogLevel;
   path?: string;
   cacheTimeInMs?: number;
   cacheEngine?: ICacheEngine;
   method?: string;
-
   passThroughHeaders?: string[];
   cacheKeyIncludedHeaders?: string[];
-
   staticVariables?: Record<string, unknown>;
   defaultVariables?: Record<string, unknown>;
 }
@@ -39,13 +37,12 @@ export interface IConstructorRouteOptions {
 export interface IRouteOptions {
   path?: string;
   logger?: ILogger;
-  defaultLogLevel?: LogLevel;
+  logLevel?: LogLevel;
   cacheTimeInMs?: number;
   cacheEngine?: ICacheEngine;
   method?: string;
   passThroughHeaders?: string[];
   cacheKeyIncludedHeaders?: string[];
-
   staticVariables?: Record<string, unknown>;
   defaultVariables?: Record<string, unknown>;
 }

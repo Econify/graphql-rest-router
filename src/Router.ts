@@ -84,7 +84,7 @@ export default class Router {
       try {
         return traverseAndBuildOptimizedQuery(schema, operationName);
       } catch (e) {
-        console.error('failed to build optimized schema');
+        console.error('Failed to build optimized schema', e);
       }
     }
 

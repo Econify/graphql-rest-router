@@ -59,7 +59,7 @@ function traverseAndBuildOptimizedQuery(
 
   findFragments(operationAST.selectionSet.selections);
 
-  const optimizedSchema = `${Object.values(resultMap).join(' \n ')} \n ${print(operationAST)}`;
+  const optimizedSchema = `${Object.values(resultMap).join('\n')}\n${print(operationAST)}`;
 
   return parse(optimizedSchema);
 }

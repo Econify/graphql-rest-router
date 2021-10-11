@@ -25,6 +25,12 @@ enum EHTTPMethod {
 }
 */
 
+function optionsDeprecationWarning(methodName: string) {
+  /* Use console.warn instead of Logger instance
+   * so it always logs the warning regardless of logger configuration */
+  console.warn(`Deprecated method ${methodName}() called. This function will be removed in a later version, please use withOption() or withOptions() instead.`);
+}
+
 function isVariableArray(node: any): boolean {
   if (node.type.kind === 'NonNullType') {
     return isVariableArray(node.type);
@@ -115,6 +121,7 @@ export default class Route implements IMountableItem {
     const {
       schema,
       operationName,
+      axios,
 
       ...options
     } = configuration;
@@ -124,7 +131,7 @@ export default class Route implements IMountableItem {
     }
 
     this.schema = typeof schema === 'string' ? parse(schema) : schema;
-    this.axios = configuration.axios;
+    this.axios = axios;
     this.logger = new Logger();
 
     this.setOperationName(operationName);
@@ -361,58 +368,52 @@ export default class Route implements IMountableItem {
   }
 
   addCacheKeyHeader(header: string): this {
-    this.optionsDeprecationWarning('addCacheKeyHeader');
+    optionsDeprecationWarning('addCacheKeyHeader');
     this.withOption('cacheKeyIncludedHeaders', header);
 
     return this;
   }
 
   whitelistHeaderForPassThrough(header: string): this {
-    this.optionsDeprecationWarning('whitelistHeaderForPassThrough');
+    optionsDeprecationWarning('whitelistHeaderForPassThrough');
     this.withOption('passThroughHeaders', header);
 
     return this;
   }
 
   setLogLevel(logLevel: LogLevel): this {
-    this.optionsDeprecationWarning('setLogLevel');
+    optionsDeprecationWarning('setLogLevel');
     this.withOption('logLevel', logLevel);
 
     return this;
   }
 
   transformRequest(fn: AxiosTransformer): this {
-    this.optionsDeprecationWarning('transformRequest');
+    optionsDeprecationWarning('transformRequest');
     this.withOption('transformRequest', fn);
 
     return this;
   }
 
   transformResponse(fn: AxiosTransformer): this {
-    this.optionsDeprecationWarning('transformResponse');
+    optionsDeprecationWarning('transformResponse');
     this.withOption('transformResponse', fn);
 
     return this;
   }
 
   setCacheTimeInMs(cacheTimeInMs: number): this {
-    this.optionsDeprecationWarning('setCacheTimeInMs');
+    optionsDeprecationWarning('setCacheTimeInMs');
     this.withOption('cacheTimeInMs', cacheTimeInMs);
 
     return this;
   }
 
   disableCache(): this {
-    this.optionsDeprecationWarning('disableCache');
+    optionsDeprecationWarning('disableCache');
     this.withOption('cacheTimeInMs', 0);
 
     return this;
-  }
-
-  private optionsDeprecationWarning(methodName: string) {
-    /* Use console.warn instead of this.logger.warn
-     * so it always logs the warning regardless of logger configuration */
-    console.warn(`Deprecated method ${methodName}() called. This function will be removed in a later version, please use withOption() or withOptions() instead.`);
   }
 
   get queryVariables(): IOperationVariable[] {

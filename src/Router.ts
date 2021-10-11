@@ -116,12 +116,12 @@ export default class Router {
 
         cacheEngine,
         cacheTimeInMs: defaultCacheTimeInMs,
-        cacheKeyIncludedHeaders: cacheKeyIncludedHeaders?.map(s => s.toLowerCase()),
+        cacheKeyIncludedHeaders,
 
         logger,
-        defaultLogLevel,
+        logLevel: defaultLogLevel,
 
-        passThroughHeaders: passThroughHeaders.map(s => s.toLowerCase()),
+        passThroughHeaders,
       };
 
       const graphQLRoute = new Route(routeOptions);

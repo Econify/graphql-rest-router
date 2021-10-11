@@ -25,6 +25,12 @@ enum EHTTPMethod {
 }
 */
 
+function optionsDeprecationWarning(methodName: string) {
+  /* Use console.warn instead of Logger instance
+   * so it always logs the warning regardless of logger configuration */
+  console.warn(`Deprecated method ${methodName}() called. This function will be removed in a later version, please use withOption() or withOptions() instead.`);
+}
+
 function isVariableArray(node: any): boolean {
   if (node.type.kind === 'NonNullType') {
     return isVariableArray(node.type);
@@ -95,11 +101,10 @@ export default class Route implements IMountableItem {
 
   private axios!: AxiosInstance;
   private schema!: DocumentNode;
+  private logger!: Logger;
 
   private transformRequestFn: AxiosTransformer[] = [];
   private transformResponseFn: AxiosTransformer[] = [];
-
-  private logger?: Logger;
 
   private staticVariables: Record<string, unknown> = {};
   private defaultVariables: Record<string, unknown> = {};
@@ -116,6 +121,7 @@ export default class Route implements IMountableItem {
     const {
       schema,
       operationName,
+      axios,
 
       ...options
     } = configuration;
@@ -125,7 +131,8 @@ export default class Route implements IMountableItem {
     }
 
     this.schema = typeof schema === 'string' ? parse(schema) : schema;
-    this.axios = configuration.axios;
+    this.axios = axios;
+    this.logger = new Logger();
 
     this.setOperationName(operationName);
 
@@ -151,30 +158,6 @@ export default class Route implements IMountableItem {
     return passThroughHeaders;
   }
 
-  addCacheableHeader(header: string): this {
-    this.cacheKeyIncludedHeaders.add(header.toLowerCase());
-
-    return this;
-  }
-
-  whitelistHeaderForPassThrough(header: string): this {
-    this.passThroughHeaders.push(header.toLowerCase());
-
-    return this;
-  }
-
-  at(path: string): this {
-    this.path = cleanPath(path);
-
-    return this;
-  }
-
-  as(httpMethod: string): this {
-    // this.httpMethod = EHTTPMethod[EHTTPMethod[httpMethod]];
-    this.httpMethod = httpMethod.toLowerCase();
-
-    return this;
-  }
 
   private getOperationVariables(operation: any): IOperationVariableMap {
     const variableMap: IOperationVariableMap = {};
@@ -205,59 +188,6 @@ export default class Route implements IMountableItem {
 
     this.operationName = operationName;
     this.operationVariables = this.getOperationVariables(operation);
-  }
-
-  withOptions(options: IRouteOptions): this {
-    const {
-      path,
-      method: httpMethod,
-      defaultVariables,
-      staticVariables,
-      cacheTimeInMs,
-      cacheEngine,
-      logger,
-      defaultLogLevel,
-      passThroughHeaders,
-      cacheKeyIncludedHeaders,
-    } = options;
-
-    if (path) {
-      this.at(path);
-    }
-
-    if (httpMethod) {
-      this.as(httpMethod);
-    }
-
-    if (passThroughHeaders) {
-      passThroughHeaders.forEach(this.whitelistHeaderForPassThrough.bind(this));
-    }
-
-    if (cacheKeyIncludedHeaders) {
-      this.cacheKeyIncludedHeaders = new Set(cacheKeyIncludedHeaders);
-    }
-
-    if (logger && typeof defaultLogLevel === 'number') {
-      this.logger = new Logger(logger, defaultLogLevel);
-    }
-
-    if (cacheTimeInMs) {
-      this.cacheTimeInMs = cacheTimeInMs;
-    }
-
-    if (cacheEngine) {
-      this.cacheEngine = cacheEngine;
-    }
-
-    if (defaultVariables) {
-      this.defaultVariables = defaultVariables;
-    }
-
-    if (staticVariables) {
-      this.staticVariables = staticVariables;
-    }
-
-    return this;
   }
 
   private get requiredVariables(): string[] {
@@ -318,6 +248,25 @@ export default class Route implements IMountableItem {
     return parsedVariables;
   }
 
+  private addPassThroughHeaders(headers: string[] | string) {
+    if (Array.isArray(headers)) {
+      this.passThroughHeaders = this.passThroughHeaders.concat(headers.map(value => value.toLowerCase()));
+    } else {
+      this.passThroughHeaders.push(headers.toLowerCase());
+    }
+    return this;
+  }
+
+  private addCacheKeyHeaders(headers: string[] | string) {
+    if (Array.isArray(headers)) {
+      headers.forEach(v => this.cacheKeyIncludedHeaders.add(v.toLowerCase()));
+    } else {
+      this.cacheKeyIncludedHeaders.add(headers.toLowerCase());
+    }
+
+    return this;
+  }
+
   asExpressRoute() {
     return async (req: express.Request, res: express.Response): Promise<unknown> => {
       const { query, params, body } = req;
@@ -358,32 +307,111 @@ export default class Route implements IMountableItem {
 
   // areVariablesValid(variables: {}) {}
 
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+  withOption(option: string, value: any): this {
+    if (!value || !option) {
+      return this;
+    }
+
+    switch (option) {
+      case 'path':
+        return this.at(value);
+      case 'httpMethod':
+      case 'method':
+        return this.as(value);
+      case 'passThroughHeaders':
+        return this.addPassThroughHeaders(value);
+      case 'logger':
+        this.logger.setLoggerObject(value);
+        return this;
+      case 'logLevel':
+        this.logger.setLogLevel(value);
+        return this;
+      case 'cacheKeyIncludedHeaders':
+        return this.addCacheKeyHeaders(value);
+      case 'transformRequest':
+        this.transformRequestFn.push(value);
+        return this;
+      case 'transformResponse':
+        this.transformResponseFn.push(value);
+        return this;
+      case 'cacheTimeInMs':
+      case 'cacheEngine':
+      case 'staticVariables':
+      case 'defaultVariables':
+        this[option] = value;
+        return this;
+      default:
+        throw new Error(`Invalid option: ${option}`);
+    }
+  }
+
+  withOptions(options: IRouteOptions): this {
+    Object.entries(options).forEach(([k, v]) => {
+      this.withOption(k, v);
+    });
+
+    return this;
+  }
+
+  at(path: string): this {
+    this.path = cleanPath(path);
+
+    return this;
+  }
+
+  as(httpMethod: string): this {
+    // this.httpMethod = EHTTPMethod[EHTTPMethod[httpMethod]];
+    this.httpMethod = httpMethod.toLowerCase();
+
+    return this;
+  }
+
+  addCacheKeyHeader(header: string): this {
+    optionsDeprecationWarning('addCacheKeyHeader');
+    this.withOption('cacheKeyIncludedHeaders', header);
+
+    return this;
+  }
+
+  whitelistHeaderForPassThrough(header: string): this {
+    optionsDeprecationWarning('whitelistHeaderForPassThrough');
+    this.withOption('passThroughHeaders', header);
+
+    return this;
+  }
+
   setLogLevel(logLevel: LogLevel): this {
-    this.logger && this.logger.setLogLevel(logLevel);
+    optionsDeprecationWarning('setLogLevel');
+    this.withOption('logLevel', logLevel);
 
     return this;
   }
 
   transformRequest(fn: AxiosTransformer): this {
-    this.transformRequestFn.push(fn);
+    optionsDeprecationWarning('transformRequest');
+    this.withOption('transformRequest', fn);
 
     return this;
   }
 
   transformResponse(fn: AxiosTransformer): this {
-    this.transformResponseFn.push(fn);
+    optionsDeprecationWarning('transformResponse');
+    this.withOption('transformResponse', fn);
 
     return this;
   }
 
   setCacheTimeInMs(cacheTimeInMs: number): this {
-    this.cacheTimeInMs = cacheTimeInMs;
+    optionsDeprecationWarning('setCacheTimeInMs');
+    this.withOption('cacheTimeInMs', cacheTimeInMs);
 
     return this;
   }
 
   disableCache(): this {
-    this.cacheTimeInMs = 0;
+    optionsDeprecationWarning('disableCache');
+    this.withOption('cacheTimeInMs', 0);
 
     return this;
   }
@@ -465,12 +493,12 @@ export default class Route implements IMountableItem {
     const headersForPassThrough = this.filterHeadersForPassThrough(headers);
     const fingerprint = this.getRequestFingerprint(path, variables, headers);
 
-    this.logger && this.logger.info(`Incoming request on ${operationName} at ${path}, request variables: ${JSON.stringify(variables)}`);
+    this.logger.info(`Incoming request on ${operationName} at ${path}, request variables: ${JSON.stringify(variables)}`);
 
     const cachedResult = await this.checkCache(fingerprint);
 
     if (cachedResult) {
-      this.logger && this.logger.debug('Cache hit');
+      this.logger.debug('Cache hit');
       return cachedResult;
     }
 
@@ -496,17 +524,17 @@ export default class Route implements IMountableItem {
       const { data, status } = await axios(config);
 
       data.errors && data.errors.length && data.errors.forEach((error: any) => {
-        this.logger && this.logger.error(`Error in GraphQL response: ${JSON.stringify(error)}`);
+        this.logger.error(`Error in GraphQL response: ${JSON.stringify(error)}`);
       });
 
       if (this.cacheEngine && this.cacheTimeInMs !== 0) {
-        this.logger && this.logger.debug('Cache miss, setting results');
+        this.logger.debug('Cache miss, setting results');
         this.cacheEngine.set(fingerprint, JSON.stringify(data), this.cacheTimeInMs);
       }
 
       return <IResponse> { body: data, statusCode: status };
     } catch (error) {
-      this.logger && this.logger.error(error.stack);
+      this.logger.error(error.stack);
 
       if (error.response) {
         return <IResponse> {

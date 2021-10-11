@@ -56,10 +56,10 @@ describe('Router', () => {
         return operationName;
       }
 
-      function getLoggerConfig() {
-        const { logger, defaultLogLevel } = Route.prototype.configureRoute.getCall(0).args[0];
+      function getLogger() {
+        const { logger, logLevel } = Route.prototype.configureRoute.getCall(0).args[0];
 
-        return { logger, defaultLogLevel };
+        return { logger, logLevel };
       }
 
       it('should combine operation name into the configuration', () => {
@@ -78,10 +78,10 @@ describe('Router', () => {
       it('should pass logger object to Route class', () => {
         router.mount(operationName);
 
-        const { logger, defaultLogLevel: resultingDefaultLogLevel } = getLoggerConfig();
+        const { logger, logLevel } = getLogger();
 
         assert.equal(console, logger);
-        assert.equal(defaultLogLevel, resultingDefaultLogLevel);
+        assert.equal(defaultLogLevel, logLevel);
       })
     });
   });

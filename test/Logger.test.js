@@ -15,7 +15,7 @@ const defaultLogLevel = LogLevels.DEBUG;
 describe('Logger', () => {
   describe('#constructor', () => {
     it('creates logger instance', () => {
-      const logger = new Logger(loggerObject, defaultLogLevel);
+      const logger = new Logger();
 
       assert.equal(typeof logger, 'object');
     });
@@ -23,14 +23,25 @@ describe('Logger', () => {
 
   describe('#setLogLevel', () => {
     it('sets the log level', () => {
-      const logger = new Logger(loggerObject, defaultLogLevel);
-      const newLogLevel = Math.floor(Math.random() * 500);
+      const logger = new Logger();
+      const level = Math.floor(Math.random() * 500);
 
-      logger.setLogLevel(newLogLevel);
+      logger.setLogLevel(level);
 
-      assert.equal(logger.logLevel, newLogLevel);
-    })
-  })
+      assert.equal(logger.logLevel, level);
+    });
+  });
+
+  describe('#setLoggerObject', () => {
+    it('sets the logger object', () => {
+      const logger = new Logger();
+      const logObject = {};
+
+      logger.setLoggerObject(logObject);
+
+      assert.equal(logger.loggerObject, logObject);
+    });
+  });
 
   describe('logging functions', () => {
     describe('#info', () => {
@@ -39,7 +50,7 @@ describe('Logger', () => {
 
       beforeEach(() => {
         mockLogger = mock(loggerObject);
-        logger = new Logger(loggerObject, defaultLogLevel);
+        logger = new Logger().setLoggerObject(loggerObject).setLogLevel(defaultLogLevel);
       })
 
       it('calls logging objects info method', () => {
@@ -64,7 +75,7 @@ describe('Logger', () => {
 
       beforeEach(() => {
         mockLogger = mock(loggerObject);
-        logger = new Logger(loggerObject, defaultLogLevel);
+        logger = new Logger().setLoggerObject(loggerObject).setLogLevel(defaultLogLevel);
       })
 
       it('calls logging objects warn method', () => {
@@ -89,7 +100,7 @@ describe('Logger', () => {
 
       beforeEach(() => {
         mockLogger = mock(loggerObject);
-        logger = new Logger(loggerObject, defaultLogLevel);
+        logger = new Logger().setLoggerObject(loggerObject).setLogLevel(defaultLogLevel);
       })
 
       it('calls logging objects debug method', () => {
@@ -113,7 +124,7 @@ describe('Logger', () => {
 
       beforeEach(() => {
         mockLogger = mock(loggerObject);
-        logger = new Logger(loggerObject, defaultLogLevel);
+        logger = new Logger().setLoggerObject(loggerObject).setLogLevel(defaultLogLevel);
       })
 
       it('calls logging objects error method', () => {

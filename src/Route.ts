@@ -328,9 +328,14 @@ export default class Route implements IMountableItem {
       case 'transformResponse':
         this.transformResponseFn.push(value);
         return this;
-      default:
+      case 'cacheTimeInMs':
+      case 'cacheEngine':
+      case 'staticVariables':
+      case 'defaultVariables':
         this[option] = value;
         return this;
+      default:
+        throw new Error(`Invalid option: ${option}`);
     }
   }
 

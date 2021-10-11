@@ -3,7 +3,7 @@ import SCHEMA from './schema';
 
 const { ENDPOINT = '' } = process.env;
 
-const api = new GraphQLRestRouter(ENDPOINT, SCHEMA);
+const api = new GraphQLRestRouter(ENDPOINT, SCHEMA, { optimizeQueryRequest: true });
 
 const documentation = new OpenApi.V2({
   title: 'My REST API', // REQUIRED!

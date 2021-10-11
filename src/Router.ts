@@ -4,9 +4,10 @@
 import * as express from 'express';
 import * as bodyParser from 'body-parser';
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
-import { parse, DocumentNode, getOperationAST } from 'graphql';
+import { parse, DocumentNode } from 'graphql';
 
 import Route from './Route';
+import traverseAndBuildOptimizedQuery from './traverseAndBuildOptimizedQuery';
 import { IGlobalConfiguration, IMountableItem, IConstructorRouteOptions } from './types';
 import { LogLevels } from './Logger';
 
@@ -80,11 +81,11 @@ export default class Router {
     const { optimizeQueryRequest } = options;
 
     if (optimizeQueryRequest) {
-      console.warn(
-        'optimizeQueryRequest is a beta feature. It does not work with fragments'
-      );
-
-      return getOperationAST(schema, operationName);
+      try {
+        return traverseAndBuildOptimizedQuery(schema, operationName);
+      } catch (e) {
+        console.error('Failed to build optimized schema', e);
+      }
     }
 
     return schema;
@@ -95,11 +96,11 @@ export default class Router {
   mount(operationNameOrMountableItem: string | IMountableItem, options?: any): IMountableItem {
     if (typeof operationNameOrMountableItem === 'string') {
       const {
-        schema,
         axios,
         options: { logger, defaultLogLevel, cacheEngine, defaultCacheTimeInMs, cacheKeyIncludedHeaders },
       } = this;
       const operationName = operationNameOrMountableItem;
+      const schema = this.queryForOperation(operationName);
 
       // eslint-disable-next-line no-extra-boolean-cast
       const passThroughHeaders = Boolean(options)

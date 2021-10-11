@@ -4,7 +4,7 @@
 import * as express from 'express';
 import * as bodyParser from 'body-parser';
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
-import { parse, DocumentNode } from 'graphql';
+import { parse, DocumentNode, getOperationAST } from 'graphql';
 
 import Route from './Route';
 import traverseAndBuildOptimizedQuery from './traverseAndBuildOptimizedQuery';
@@ -29,7 +29,7 @@ const DEFAULT_CONFIGURATION: IGlobalConfiguration = {
 };
 
 export default class Router {
-  private schema: DocumentNode;
+  private schema?: DocumentNode;
   private options: IGlobalConfiguration;
 
   public routes: Route[] = [];
@@ -38,7 +38,7 @@ export default class Router {
 
   private passThroughHeaders: string[] = [];
 
-  constructor(public endpoint: string, schema: string, assignedConfiguration?: IGlobalConfiguration) {
+  constructor(public endpoint: string, schema?: string, assignedConfiguration?: IGlobalConfiguration) {
     const {
       auth,
       proxy,
@@ -66,8 +66,11 @@ export default class Router {
       responseType: 'json',
     };
 
-    this.schema = parse(schema);
     this.axios = axios.create(axiosConfig);
+
+    if (schema) {
+      this.schema = parse(schema);
+    }
 
     if (passThroughHeaders) {
       this.passThroughHeaders = passThroughHeaders;
@@ -79,6 +82,12 @@ export default class Router {
   private queryForOperation(operationName: string) {
     const { schema, options } = this;
     const { optimizeQueryRequest } = options;
+
+    if (!schema) {
+      console.warn('optimizeQueryRequest has no effect when not using schema');
+
+      return schema;
+    }
 
     if (optimizeQueryRequest) {
       try {
@@ -92,15 +101,21 @@ export default class Router {
   }
 
   mount(operationName: string, options?: any): Route;
+  mount(inlineOperation: string, options?: any): Route;
   mount(mountableItem: IMountableItem, options?: any): IMountableItem;
-  mount(operationNameOrMountableItem: string | IMountableItem, options?: any): IMountableItem {
-    if (typeof operationNameOrMountableItem === 'string') {
+  mount(operationOrMountableItem: string | IMountableItem, options?: any): IMountableItem {
+    if (typeof operationOrMountableItem === 'string') {
       const {
+        schema: defaultSchema,
         axios,
         options: { logger, defaultLogLevel, cacheEngine, defaultCacheTimeInMs, cacheKeyIncludedHeaders },
       } = this;
-      const operationName = operationNameOrMountableItem;
-      const schema = this.queryForOperation(operationName);
+      const isOperationName = defaultSchema &&
+        Boolean(getOperationAST(defaultSchema, operationOrMountableItem));
+      const operationName = isOperationName ? operationOrMountableItem : undefined;
+      const schema = isOperationName ?
+        this.queryForOperation(operationOrMountableItem) :
+        parse(operationOrMountableItem);
 
       // eslint-disable-next-line no-extra-boolean-cast
       const passThroughHeaders = Boolean(options)
@@ -113,7 +128,6 @@ export default class Router {
 
         axios,
         schema,
-
         cacheEngine,
         cacheTimeInMs: defaultCacheTimeInMs,
         cacheKeyIncludedHeaders,
@@ -131,7 +145,7 @@ export default class Router {
       return graphQLRoute;
     }
 
-    const mountedItem = operationNameOrMountableItem.withOptions(options);
+    const mountedItem = operationOrMountableItem.withOptions(options);
 
     if (mountedItem.onMount) {
       mountedItem.onMount(this);

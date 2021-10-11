@@ -20,7 +20,7 @@ export interface IGlobalConfiguration {
 
 export interface IConstructorRouteOptions {
   schema: DocumentNode | string; // GraphQL Document Type
-  operationName: string;
+  operationName?: string;
   axios: AxiosInstance;
   logger?: ILogger;
   logLevel: LogLevel;

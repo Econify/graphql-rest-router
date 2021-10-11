@@ -265,6 +265,22 @@ It is also possible to describe a required variable in the path using a syntax s
 api.mount('GetUserById').at('/user/:id'); // A call to /user/42 will execute a 'GetUserById'operation on your GQL server with an id of 42
 ```
 
+#### Schemaless Mount
+
+A schema is optional with GraphQL Rest Router. You may inline a query on call to mount() instead.
+
+Example:
+
+```js
+const api = new GraphQLRestRouter(endpoint);
+
+// Simple inline query
+api.mount('{ users { displayName } }').at('/usernames'); // GET /usernames
+
+// With a path parameter
+api.mount('query GetUserByID($id: ID!) { displayName }').at('/user/:id'); // GET /user/:id
+```
+
 ### Proxies and Authentication
 
 If the server that you are running GraphQL Rest Router on requires a proxy to connect to the GraphQL server or credentials to connect, you may pass them directly into GQL Rest Router during instantiation or on a per route basis to limit them to specific routes. See [Advanced Configuration of GraphQL Rest Router](#Advanced-Configuration-of-GraphQL-Rest-Router) for implementation

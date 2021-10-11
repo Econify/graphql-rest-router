@@ -1,97 +1,11 @@
 const graphql = require('graphql');
 const { assert } = require('chai');
+const fs = require('fs');
 
 const { print, parse } = graphql;
 
 const traverseAndBuildOptimizedQuery = require('../src/traverseAndBuildOptimizedQuery').default;
-
-const schema = `
-  fragment info on Info {
-    count
-    pages
-    next
-    prev
-  }
-
-  fragment location on Location {
-    id
-    name
-    residents {
-      ...character
-    }
-  }
-
-  fragment character on Character {
-    id
-    name
-    origin {
-      ...location
-    }
-  }
-
-  fragment episode on Episode {
-    id
-    name
-    air_date
-    episode
-    created
-    characters {
-      ...character
-    }
-  }
-
-  query GetCharacterById($id: ID!) {
-    character(id: $id) {
-      ...character
-    }
-  }
-
-  query GetCharacters {
-    characters {
-      info {
-        ...info
-      }
-      results {
-        ...character
-      }
-    }
-  }
-
-  query GetLocationById($id: ID!) {
-    location(id: $id) {
-      ...location
-    }
-  }
-
-  query GetLocations {
-    locations {
-      info {
-        ...info
-      }
-      results {
-        ...location
-      }
-    }
-  }
-
-  query GetEpisodeById($id: ID!) {
-    episode(id: $id) {
-      ...episode
-    }
-  }
-
-  query GetEpisodes {
-    episodes {
-      info {
-        ...info
-      }
-      results {
-        ...episode
-      }
-    }
-  }
-`;
-
+const schema = fs.readFileSync(`${__dirname}/schema.example.graphql`, 'utf8');
 
 describe('traverseAndBuildOptimizedQuery', () => {
   it('returns original full parsed schema if no FragmentDefinitions are found', () => {

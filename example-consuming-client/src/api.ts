@@ -30,7 +30,7 @@ api.mount('GetLocations').at('/locations').transformResponse(response => {
 
 api.mount('GetLocationById').at('/locations/:id');
 
-api.mount('GetEpisodes').at('episodes'); // .withOptions({ optimizeQueryRequest: true });
+api.mount('GetEpisodes').at('episodes');
 api.mount('GetEpisodeById').at('episodes/:id');
 
 api.mount(documentation).at('/docs/openapi');

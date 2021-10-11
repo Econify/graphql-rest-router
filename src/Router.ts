@@ -78,7 +78,7 @@ export default class Router {
 
   private queryForOperation(operationName: string) {
     const { schema, options } = this;
-    const { optimizeQueryRequest } = options; // should this be on a per route basis?
+    const { optimizeQueryRequest } = options;
 
     if (optimizeQueryRequest) {
       try {

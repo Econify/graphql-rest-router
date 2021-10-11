@@ -16,8 +16,7 @@ function traverseAndBuildOptimizedQuery(
 ): DocumentNode {
   const resultMap: { [k: string]: string } = {};
 
-  function getFragmentSchema(fragmentName: string): FragmentDefinitionNode {
-    // Should this throw if it fails?
+  function getFragmentSchema(fragmentName: string) {
     const fragmentSchema = schema.definitions.find((definition) =>
       definition.kind === 'FragmentDefinition' && definition.name.value === fragmentName);
 
@@ -61,9 +60,6 @@ function traverseAndBuildOptimizedQuery(
   findFragments(operationAST.selectionSet.selections);
 
   const optimizedSchema = `${Object.values(resultMap).join(' \n ')} \n ${print(operationAST)}`;
-
-  // console.log(operationName);
-  // console.log(optimizedSchema);
 
   return parse(optimizedSchema);
 }

@@ -3,7 +3,7 @@
 
 import { IncomingHttpHeaders } from 'http';
 import { DocumentNode, parse, print, getOperationAST } from 'graphql';
-import { AxiosTransformer, AxiosInstance, AxiosRequestConfig } from 'axios';
+import axios, { AxiosTransformer, AxiosInstance, AxiosRequestConfig } from 'axios';
 import * as express from 'express';
 
 import { createHash } from 'crypto';
@@ -103,8 +103,8 @@ export default class Route implements IMountableItem {
   private schema!: DocumentNode;
   private logger!: Logger;
 
-  private transformRequestFn: AxiosTransformer[] = [];
-  private transformResponseFn: AxiosTransformer[] = [];
+  private transformRequestFn = axios.defaults.transformRequest as AxiosTransformer[];
+  private transformResponseFn = axios.defaults.transformResponse as AxiosTransformer[];
 
   private staticVariables: Record<string, unknown> = {};
   private defaultVariables: Record<string, unknown> = {};

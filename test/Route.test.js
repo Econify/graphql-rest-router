@@ -15,7 +15,7 @@ describe('Route', () => {
         let route;
 
         beforeEach(() => {
-          route = new Route({ graphQLEndpoint, schema, operationName });
+          route = new Route({ schema, operationName });
         });
 
         it('should set path to the path and operation name', () => {
@@ -27,11 +27,10 @@ describe('Route', () => {
       describe('when using full configuration', () => {
         const configuration = {
           schema,
-          graphQLEndpoint,
           operationName: 'GetUserByEmail',
           path: '/user/:id',
           logger: console,
-          defaultLogLevel: 3,
+          logLevel: 3,
         };
         let route;
 
@@ -55,13 +54,13 @@ describe('Route', () => {
       describe('when using chained configuration', () => {
         let route;
         beforeEach(() => {
-          route = new Route({ graphQLEndpoint, schema, operationName: 'GetUserById', logger: console, defaultLogLevel: 3 });
+          route = new Route({ schema, operationName: 'GetUserById', logger: console, logLevel: 3 });
         });
 
-        it('should allow you to change logging level with .setLogLevel()', () => {
+        it('should allow you to change logging level with .withOption()', () => {
           const newLogLevel = -1;
 
-          route.setLogLevel(newLogLevel);
+          route.withOption('logLevel', newLogLevel);
 
           assert.equal(route.logger.logLevel, newLogLevel);
         })
@@ -100,10 +99,62 @@ describe('Route', () => {
     });
   });
 
+  describe('#transformResponse', () => {
+    const operationName = 'GetUserById';
+    let route;
+
+    beforeEach(() => {
+      route = new Route({ schema, operationName });
+    });
+
+    it('should include the default axios transformResponse', () => {
+      assert.equal(route.transformResponseFn.length, 1)
+    });
+
+    it('should append additional transforms when called', () => {
+      route.withOption('transformResponse', (data) => 'testing transform')
+      assert.equal(route.transformResponseFn.length, 2);
+    });
+
+    it('should return data as JSON if response is stringified JSON', async () => {
+      const stringifiedJSON = "{\"data\":{\"users\":[{\"id\":1,\"name\":\"Charles Barkley\"}]}}";
+      const transformResponse = route.transformResponseFn[0];
+      const data = await transformResponse(stringifiedJSON);
+
+      assert.strictEqual(typeof data, 'object');
+    });
+  });
+
+  describe('#transformRequest', () => {
+    const operationName = 'GetUserById';
+    let route;
+
+    beforeEach(() => {
+      route = new Route({ schema, operationName });
+    });
+
+    it('should include the default axios transformRequest', () => {
+      assert.equal(route.transformRequestFn.length, 1)
+    });
+
+    it('should append additional transforms when called', () => {
+      route.withOption('transformRequest', (data) => 'testing transform')
+      assert.equal(route.transformRequestFn.length, 2);
+    });
+
+    it('should return request', async () => {
+      const stringifiedRequest = `{"query":"{users}","operationName":"${operationName}"}`;
+      const transformRequest = route.transformRequestFn[0];
+      const data = await transformRequest(stringifiedRequest);
+
+      assert.strictEqual(data, stringifiedRequest);
+    });
+  });
+
   describe('private#setOperationName', () => {
     it('throws an error if operation name does not exist in the schema', () => {
       assert.throws(() => {
-        new Route({ graphQLEndpoint, schema, operationName: 'FakeQuery' });
+        new Route({ schema, operationName: 'FakeQuery' });
       }, Error);
     });
 
@@ -112,7 +163,7 @@ describe('Route', () => {
       let operationName = 'GetUserById';
 
       beforeEach(() => {
-        route = new Route({ schema, operationName, graphQLEndpoint });
+        route = new Route({ schema, operationName });
       });
 
       it('should set operation name', () => {
@@ -142,8 +193,8 @@ describe('Route', () => {
       const operationName = 'GetUserById';
       const operationAsPath = `/${operationName}`;
 
-      const route = new Route({ graphQLEndpoint, schema, operationName });
-      
+      const route = new Route({ schema, operationName });
+
       assert.equal(route.operationName, operationName);
       assert.equal(route.path, operationAsPath);
     });

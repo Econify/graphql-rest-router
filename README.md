@@ -333,7 +333,9 @@ api.mount('GetUser').withOptions({
 
 ### Request & Response Transformations
 
-GraphQL Rest Router allows the developer to add transformations on incoming requests or outgoing responses. Say the shape of data coming from GraphQL is not what your consuming application needs. Instead of putting transformational logic into your consuming components, you can encapsulate it into the REST layer.
+GraphQL Rest Router allows the developer to add transformations on incoming requests or outgoing responses. By default, the regular axios transformers are used.
+
+Say the shape of data coming from GraphQL is not what your consuming application needs. Instead of putting transformational logic into your consuming components, you can encapsulate it into the REST layer.
 
 ```js
 import GraphQLRestRouter from 'graphql-rest-router';
@@ -355,7 +357,7 @@ api.mount('GetImages').withOption('transformResponse', (response => {
 }));
 ```
 
-You can also modify the outgoing request:
+You can also modify the outgoing request. These transforms should return a string request, but also allow you to modify the request headers.
 
 ```js
 import GraphQLRestRouter from 'graphql-rest-router';

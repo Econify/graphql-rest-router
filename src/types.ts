@@ -1,5 +1,5 @@
 import Router from './Router';
-import { AxiosBasicCredentials, AxiosProxyConfig, AxiosInstance } from 'axios';
+import { AxiosBasicCredentials, AxiosProxyConfig, AxiosInstance, AxiosTransformer } from 'axios';
 import { DocumentNode } from 'graphql';
 import express from 'express';
 
@@ -45,6 +45,8 @@ export interface IRouteOptions {
   cacheKeyIncludedHeaders?: string[];
   staticVariables?: Record<string, unknown>;
   defaultVariables?: Record<string, unknown>;
+  transformRequest?: AxiosTransformer;
+  transformResponse?: AxiosTransformer;
 }
 
 export interface IOperationVariableMap {

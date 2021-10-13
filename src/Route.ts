@@ -66,7 +66,7 @@ function getDefaultValue(node: VariableDefinitionNode): string | boolean | numbe
     return undefined;
   }
 
-  if (node.defaultValue?.kind === 'NullValue') {
+  if (node.defaultValue.kind === 'NullValue') {
     return null;
   }
 

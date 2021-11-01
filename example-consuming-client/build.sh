@@ -15,7 +15,7 @@ then
     echo "Node modules exist."
 else
     echo "Node modules do not exist in parent. Installing all dependencies."
-    npm install
+    npm ci
 fi
 
 npm run build
@@ -30,7 +30,7 @@ then
     echo "Node modules exist. Just installing rest router."
 else
     echo "Node modules does not exist. Installing all dependencies."
-    npm install
+    npm ci
 fi
 
 npm install ../build

@@ -3,9 +3,9 @@ import SCHEMA from './schema';
 
 const { ENDPOINT = '' } = process.env;
 
-const api = new GraphQLRestRouter(ENDPOINT, SCHEMA, { optimizeQueryRequest: true });
+const api = new GraphQLRestRouter(ENDPOINT, SCHEMA, { optimizeQueryRequest: true, logger: console });
 
-const documentation = new OpenApi.V2({
+const documentation = new OpenApi.V3({
   title: 'My REST API', // REQUIRED!
   version: '1.0.0',     // REQUIRED!
   host: 'http://localhost:4000',

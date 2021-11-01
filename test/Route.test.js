@@ -4,7 +4,6 @@ const Logger = require('../src/Logger').default;
 const fs = require('fs');
 
 describe('Route', () => {
-  const graphQLEndpoint = 'http://example.com';
   const schema = fs.readFileSync(`${__dirname}/schema.example.graphql`, 'utf8');
 
   describe('#constructor', () => {
@@ -119,7 +118,8 @@ describe('Route', () => {
     it('should return data as JSON if response is stringified JSON', async () => {
       const stringifiedJSON = "{\"data\":{\"users\":[{\"id\":1,\"name\":\"Charles Barkley\"}]}}";
       const transformResponse = route.transformResponseFn[0];
-      const data = await transformResponse(stringifiedJSON);
+      const transitional = {}
+      const data = await transformResponse.bind(transitional)(stringifiedJSON);
 
       assert.strictEqual(typeof data, 'object');
     });
@@ -194,7 +194,6 @@ describe('Route', () => {
       const operationAsPath = `/${operationName}`;
 
       const route = new Route({ schema, operationName });
-
       assert.equal(route.operationName, operationName);
       assert.equal(route.path, operationAsPath);
     });

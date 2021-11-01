@@ -58,7 +58,7 @@ export interface IOperationVariable {
   required: boolean;
   type: string;
   array: boolean;
-  defaultValue?: string | boolean | number;
+  defaultValue?: string | boolean | number | null;
 }
 
 export interface IResponse {

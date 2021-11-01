@@ -1,15 +1,15 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// TODO: UNDO THIS ^^^
-
 import { IncomingHttpHeaders } from 'http';
-import { DocumentNode, parse, print, getOperationAST } from 'graphql';
+import {
+  OperationDefinitionNode, ListTypeNode, VariableDefinitionNode,
+  parse, print, getOperationAST, NonNullTypeNode, DocumentNode,
+} from 'graphql';
 import { AxiosTransformer, AxiosInstance, AxiosRequestConfig } from 'axios';
 import * as express from 'express';
 
 import { createHash } from 'crypto';
 
 import {
-  IMountableItem, IConstructorRouteOptions, IRouteOptions, LogLevel,
+  IMountableItem, IConstructorRouteOptions, IRouteOptions, LogLevel, ILogger,
   IOperationVariableMap, IOperationVariable, IResponse, ICacheEngine,
 }  from './types';
 
@@ -31,7 +31,7 @@ function optionsDeprecationWarning(methodName: string) {
   console.warn(`Deprecated method ${methodName}() called. This function will be removed in a later version, please use withOption() or withOptions() instead.`);
 }
 
-function isVariableArray(node: any): boolean {
+function isVariableArray(node: VariableDefinitionNode | NonNullTypeNode): boolean {
   if (node.type.kind === 'NonNullType') {
     return isVariableArray(node.type);
   }
@@ -39,7 +39,7 @@ function isVariableArray(node: any): boolean {
   return node.type.kind === 'ListType';
 }
 
-function translateVariableType(node: any): string {
+function translateVariableType(node: VariableDefinitionNode | ListTypeNode | NonNullTypeNode): string {
   if (node.type.kind === 'NonNullType' || node.type.kind === 'ListType') {
     return translateVariableType(node.type);
   }
@@ -55,6 +55,24 @@ function cleanPath(path: string): string {
   return `/${path}`;
 }
 
+function getDefaultValue(node: VariableDefinitionNode): string | boolean | number | null | undefined {
+  if (
+    !node.defaultValue ||
+    node.defaultValue.kind === 'Variable' ||
+    node.defaultValue.kind === 'ListValue' ||
+    node.defaultValue.kind === 'ObjectValue'
+  ) {
+    // TODO: implement different kinds of variables
+    return undefined;
+  }
+
+  if (node.defaultValue.kind === 'NullValue') {
+    return null;
+  }
+
+  return node.defaultValue.value;
+}
+
 
 // NOTE:
 // Consider moving the introspection of the graphql query into the routes so that
@@ -62,7 +80,7 @@ function cleanPath(path: string): string {
 //
 // This attempts to typecast all unknown types to JSON but the try catch deoptimizes the parsing of the JSON
 // and may affect performance.
-function attemptJSONParse(variable: string): any {
+function attemptJSONParse(variable: string): string | unknown {
   try {
     return JSON.parse(variable);
   } catch (e) {
@@ -70,7 +88,10 @@ function attemptJSONParse(variable: string): any {
   }
 }
 
-function typecastVariable(variable: string, variableDefinition: IOperationVariable): any {
+function typecastVariable(
+  variable: string,
+  variableDefinition: IOperationVariable
+): string | boolean | number | unknown {
   switch (variableDefinition && variableDefinition.type) {
     case 'Int':
       return parseInt(variable, 10);
@@ -158,18 +179,17 @@ export default class Route implements IMountableItem {
     return passThroughHeaders;
   }
 
-
-  private getOperationVariables(operation: any): IOperationVariableMap {
+  private getOperationVariables(operation: OperationDefinitionNode): IOperationVariableMap {
     const variableMap: IOperationVariableMap = {};
 
-    operation.variableDefinitions.forEach(
-      (node: any): void => {
+    operation.variableDefinitions?.forEach(
+      (node: VariableDefinitionNode): void => {
         const variable: IOperationVariable = {
           name: node.variable.name.value,
           required: node.type.kind === 'NonNullType',
           type: translateVariableType(node),
           array: isVariableArray(node),
-          defaultValue: (node.defaultValue || {}).value,
+          defaultValue: getDefaultValue(node)
         };
 
         variableMap[variable.name] = variable;
@@ -271,7 +291,7 @@ export default class Route implements IMountableItem {
     return async (req: express.Request, res: express.Response): Promise<unknown> => {
       const { query, params, body } = req;
 
-      const parsedQueryVariables = this.typecastVariables(query as any);
+      const parsedQueryVariables = this.typecastVariables(query as Record<string, string>);
       const parsedPathVariables = this.typecastVariables(params);
 
       const providedVariables = { ...parsedQueryVariables, ...parsedPathVariables, ...body };
@@ -307,39 +327,44 @@ export default class Route implements IMountableItem {
 
   // areVariablesValid(variables: {}) {}
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-  withOption(option: string, value: any): this {
+  withOption(option: string, value: unknown): this {
     if (!value || !option) {
       return this;
     }
 
     switch (option) {
       case 'path':
-        return this.at(value);
+        return this.at(value as string);
       case 'httpMethod':
       case 'method':
-        return this.as(value);
+        return this.as(value as string);
       case 'passThroughHeaders':
-        return this.addPassThroughHeaders(value);
+        return this.addPassThroughHeaders(value as string);
       case 'logger':
-        this.logger.setLoggerObject(value);
+        this.logger.setLoggerObject(value as ILogger);
         return this;
       case 'logLevel':
-        this.logger.setLogLevel(value);
+        this.logger.setLogLevel(value as LogLevel);
         return this;
       case 'cacheKeyIncludedHeaders':
-        return this.addCacheKeyHeaders(value);
+        return this.addCacheKeyHeaders(value as string);
       case 'transformRequest':
-        this.transformRequestFn.push(value);
+        this.transformRequestFn.push(value as AxiosTransformer);
         return this;
       case 'transformResponse':
-        this.transformResponseFn.push(value);
+        this.transformResponseFn.push(value as AxiosTransformer);
         return this;
       case 'cacheTimeInMs':
+        this.cacheTimeInMs = value as number;
+        return this;
       case 'cacheEngine':
+        this.cacheEngine = value as ICacheEngine;
+        return this;
       case 'staticVariables':
+        this.staticVariables = value as Record<string, unknown>;
+        return this;
       case 'defaultVariables':
-        this[option] = value;
+        this.defaultVariables = value as Record<string, unknown>;
         return this;
       default:
         throw new Error(`Invalid option: ${option}`);
@@ -523,7 +548,7 @@ export default class Route implements IMountableItem {
     try {
       const { data, status } = await axios(config);
 
-      data.errors && data.errors.length && data.errors.forEach((error: any) => {
+      data.errors?.forEach((error: unknown) => {
         this.logger.error(`Error in GraphQL response: ${JSON.stringify(error)}`);
       });
 

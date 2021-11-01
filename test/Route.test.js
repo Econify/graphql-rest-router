@@ -118,8 +118,14 @@ describe('Route', () => {
     it('should return data as JSON if response is stringified JSON', async () => {
       const stringifiedJSON = "{\"data\":{\"users\":[{\"id\":1,\"name\":\"Charles Barkley\"}]}}";
       const transformResponse = route.transformResponseFn[0];
-      const transitional = {}
-      const data = await transformResponse.bind(transitional)(stringifiedJSON);
+      const transitional = {
+        silentJSONParsing: true,
+        forcedJSONParsing: true,
+        clarifyTimeoutError: false
+      };
+      // HACK: transitional default not bound to axios function by default. This is fixed in
+      // later versions of axios (> 0.24.0), please remove after upgrade.
+      const data = await transformResponse.bind({ transitional })(stringifiedJSON);
 
       assert.strictEqual(typeof data, 'object');
     });

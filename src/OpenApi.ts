@@ -143,7 +143,9 @@ function buildSchemaParameter(
 }
 
 // TODO: Return Type and Attempt to get description from graphql
-function buildParametersArray({ variableDefinitions, variableLocation, refLocation }: IBuildParametersArguments): IParameter[] {
+function buildParametersArray(
+  { variableDefinitions, variableLocation, refLocation } : IBuildParametersArguments
+): IParameter[] {
   return variableDefinitions.map(
     (variableDefinition: IOperationVariable): IParameter => ({
       name: variableDefinition.name,

@@ -4,7 +4,6 @@ const Logger = require('../src/Logger').default;
 const fs = require('fs');
 
 describe('Route', () => {
-  const graphQLEndpoint = 'http://example.com';
   const schema = fs.readFileSync(`${__dirname}/schema.example.graphql`, 'utf8');
 
   describe('#constructor', () => {
@@ -15,7 +14,7 @@ describe('Route', () => {
         let route;
 
         beforeEach(() => {
-          route = new Route({ graphQLEndpoint, schema, operationName });
+          route = new Route({ schema, operationName });
         });
 
         it('should set path to the path and operation name', () => {
@@ -27,11 +26,10 @@ describe('Route', () => {
       describe('when using full configuration', () => {
         const configuration = {
           schema,
-          graphQLEndpoint,
           operationName: 'GetUserByEmail',
           path: '/user/:id',
           logger: console,
-          defaultLogLevel: 3,
+          logLevel: 3,
         };
         let route;
 
@@ -55,7 +53,7 @@ describe('Route', () => {
       describe('when using chained configuration', () => {
         let route;
         beforeEach(() => {
-          route = new Route({ graphQLEndpoint, schema, operationName: 'GetUserById', logger: console, defaultLogLevel: 3 });
+          route = new Route({ schema, operationName: 'GetUserById', logger: console, logLevel: 3 });
         });
 
         it('should allow you to change logging level with .setLogLevel()', () => {
@@ -103,7 +101,7 @@ describe('Route', () => {
   describe('private#setOperationName', () => {
     it('throws an error if operation name does not exist in the schema', () => {
       assert.throws(() => {
-        new Route({ graphQLEndpoint, schema, operationName: 'FakeQuery' });
+        new Route({ schema, operationName: 'FakeQuery' });
       }, Error);
     });
 
@@ -112,7 +110,7 @@ describe('Route', () => {
       let operationName = 'GetUserById';
 
       beforeEach(() => {
-        route = new Route({ schema, operationName, graphQLEndpoint });
+        route = new Route({ schema, operationName });
       });
 
       it('should set operation name', () => {
@@ -142,7 +140,7 @@ describe('Route', () => {
       const operationName = 'GetUserById';
       const operationAsPath = `/${operationName}`;
 
-      const route = new Route({ graphQLEndpoint, schema, operationName });
+      const route = new Route({ schema, operationName });
       
       assert.equal(route.operationName, operationName);
       assert.equal(route.path, operationAsPath);

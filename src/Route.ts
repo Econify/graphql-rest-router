@@ -1,7 +1,7 @@
 import { IncomingHttpHeaders } from 'http';
 import {
   OperationDefinitionNode, ListTypeNode, VariableDefinitionNode,
-  parse, print, getOperationAST, NonNullTypeNode, DocumentNode, ValueNode,
+  parse, print, getOperationAST, NonNullTypeNode, DocumentNode,
 } from 'graphql';
 import { AxiosTransformer, AxiosInstance, AxiosRequestConfig } from 'axios';
 import * as express from 'express';

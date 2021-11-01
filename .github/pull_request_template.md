@@ -24,4 +24,4 @@ Before requesting review this criteria must be met:
 
 ## Screenshots
 
-Include screenshots or video screen captures showing relevent information when applicable
+Include screenshots or video screen captures showing relevant information when applicable

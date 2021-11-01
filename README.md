@@ -331,6 +331,45 @@ api.mount('GetUser').withOptions({
 });
 ```
 
+### Request & Response Transformations
+
+GraphQL Rest Router allows the developer to add transformations on incoming requests or outgoing responses. By default, the regular axios transformers are used.
+
+Say the shape of data coming from GraphQL is not what your consuming application needs. Instead of putting transformational logic into your consuming components, you can encapsulate it into the REST layer.
+
+```js
+import GraphQLRestRouter from 'graphql-rest-router';
+
+const api = new GraphQLRestRouter('http://localhost:1227', schema);
+
+api.mount('GetImages').withOption('transformResponse', (response => {
+  const { data, errors } = response;
+
+  return {
+    data: {
+      // Turn images array into image URL map
+      images: data.images?.reduce((acc, img) => {
+        acc[img.url] = img;
+      }, {}),
+      errors,
+    }
+  };
+}));
+```
+
+You can also modify the outgoing request. These transforms should return a string request, but also allow you to modify the request headers.
+
+```js
+import GraphQLRestRouter from 'graphql-rest-router';
+
+const api = new GraphQLRestRouter('http://localhost:1227', schema);
+
+api.mount('GetImages').at('/images').withOption('transformRequest', (request, headers) => {
+  headers['X-My-Header'] = 'MyValue';
+  return request;
+});
+```
+
 ### Logging
 
 GraphQL Rest Router is capable of logging incoming requests and errors. When creating your router, you may use a logger of your own choice. GraphQL Rest Router allows you to configure log levels. The logger parameter must implement [ILogger](https://github.com/Econify/graphql-rest-router/blob/29cc328f23b8dd579a6f4af242266460e95e7d69/src/types.ts#L101-L107), and is compatible with most standard logging libraries.

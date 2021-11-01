@@ -19,8 +19,7 @@ api.mount('GetCharacters').at('/characters/').withOptions({
 api.mount('GetCharacterById').at('/characters/:id');
 
 api.mount('GetLocations').at('/locations').withOption('transformResponse', (response) => {
-  const json = JSON.parse(response);
-  const { data, errors } = json;
+  const { data, errors } = response;
 
   return {
     data: {

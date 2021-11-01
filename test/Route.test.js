@@ -56,10 +56,10 @@ describe('Route', () => {
           route = new Route({ schema, operationName: 'GetUserById', logger: console, logLevel: 3 });
         });
 
-        it('should allow you to change logging level with .setLogLevel()', () => {
+        it('should allow you to change logging level with .withOption()', () => {
           const newLogLevel = -1;
 
-          route.setLogLevel(newLogLevel);
+          route.withOption('logLevel', newLogLevel);
 
           assert.equal(route.logger.logLevel, newLogLevel);
         })
@@ -95,6 +95,65 @@ describe('Route', () => {
           assert.equal(route.path, '/test');
         });
       });
+    });
+  });
+
+  describe('#transformResponse', () => {
+    const operationName = 'GetUserById';
+    let route;
+
+    beforeEach(() => {
+      route = new Route({ schema, operationName });
+    });
+
+    it('should include the default axios transformResponse', () => {
+      assert.equal(route.transformResponseFn.length, 1)
+    });
+
+    it('should append additional transforms when called', () => {
+      route.withOption('transformResponse', (data) => 'testing transform')
+      assert.equal(route.transformResponseFn.length, 2);
+    });
+
+    it('should return data as JSON if response is stringified JSON', async () => {
+      const stringifiedJSON = "{\"data\":{\"users\":[{\"id\":1,\"name\":\"Charles Barkley\"}]}}";
+      const transformResponse = route.transformResponseFn[0];
+      const transitional = {
+        silentJSONParsing: true,
+        forcedJSONParsing: true,
+        clarifyTimeoutError: false
+      };
+      // HACK: transitional default not bound to axios function by default. This is fixed in
+      // later versions of axios (> 0.24.0), please remove after upgrade.
+      const data = await transformResponse.bind({ transitional })(stringifiedJSON);
+
+      assert.strictEqual(typeof data, 'object');
+    });
+  });
+
+  describe('#transformRequest', () => {
+    const operationName = 'GetUserById';
+    let route;
+
+    beforeEach(() => {
+      route = new Route({ schema, operationName });
+    });
+
+    it('should include the default axios transformRequest', () => {
+      assert.equal(route.transformRequestFn.length, 1)
+    });
+
+    it('should append additional transforms when called', () => {
+      route.withOption('transformRequest', (data) => 'testing transform')
+      assert.equal(route.transformRequestFn.length, 2);
+    });
+
+    it('should return request', async () => {
+      const stringifiedRequest = `{"query":"{users}","operationName":"${operationName}"}`;
+      const transformRequest = route.transformRequestFn[0];
+      const data = await transformRequest(stringifiedRequest);
+
+      assert.strictEqual(data, stringifiedRequest);
     });
   });
 
@@ -141,7 +200,6 @@ describe('Route', () => {
       const operationAsPath = `/${operationName}`;
 
       const route = new Route({ schema, operationName });
-      
       assert.equal(route.operationName, operationName);
       assert.equal(route.path, operationAsPath);
     });

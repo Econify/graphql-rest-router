@@ -124,8 +124,8 @@ export default class Route implements IMountableItem {
   private schema!: DocumentNode;
   private logger!: Logger;
 
-  private transformRequestFn = axios.defaults.transformRequest as AxiosTransformer[];
-  private transformResponseFn = axios.defaults.transformResponse as AxiosTransformer[];
+  private transformRequestFn: AxiosTransformer[] = [];
+  private transformResponseFn: AxiosTransformer[] = [];
 
   private staticVariables: Record<string, unknown> = {};
   private defaultVariables: Record<string, unknown> = {};
@@ -136,6 +136,21 @@ export default class Route implements IMountableItem {
 
   constructor(configuration: IConstructorRouteOptions) {
     this.configureRoute(configuration);
+  }
+
+  private setDefaultTransforms() {
+    const defaultTransformResponse = Array.isArray(axios.defaults.transformResponse)
+      && axios.defaults.transformResponse[0];
+    const defaultTransformRequest = Array.isArray(axios.defaults.transformRequest)
+      && axios.defaults.transformRequest[0];
+
+    if (defaultTransformResponse) {
+      this.transformResponseFn.push(defaultTransformResponse);
+    }
+
+    if (defaultTransformRequest) {
+      this.transformRequestFn.push(defaultTransformRequest);
+    }
   }
 
   private configureRoute(configuration: IConstructorRouteOptions) {
@@ -151,6 +166,7 @@ export default class Route implements IMountableItem {
       throw new Error('A valid schema is required to initialize a Route');
     }
 
+    this.setDefaultTransforms();
     this.schema = typeof schema === 'string' ? parse(schema) : schema;
     this.axios = axios;
     this.logger = new Logger();

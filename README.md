@@ -71,8 +71,7 @@ const schema = `
 const api = new GraphQLRestRouter('http://yourgraphqlserver.com', schema);
 
 api.mount('GetUserById').at('/users/:id');
-api.mount('SearchUsers').at('/users')
-  .disableCache();
+api.mount('SearchUsers').at('/users').withOption('cacheTimeInMs', 0);
 
 api.listen(3000);
 ```
@@ -81,7 +80,7 @@ See [Usage with Express](#usage-with-express) and read [Getting Started](#gettin
 
 ### External GraphQL API
 
-When dealing with a publicly exposed GraphQL server that implements users and priveleges, the main benefit GraphQL Rest Client provides is caching. While implementing individual caches at a content-level with push-expiration in the GraphQL server is optimal, building these systems is laborous and isn't always prioritized in an MVP product. GraphQL Rest Client allows you to expose a GraphQL query as a REST endpoint with built-in cache management that is compatible with all CDNs and cache management layers (e.g. CloudFlare, Akamai, Varnish, etc).
+When dealing with a publicly exposed GraphQL server that implements users and priveleges, the main benefit GraphQL Rest Router client provides is caching. While implementing individual caches at a content-level with push-expiration in the GraphQL server is optimal, building these systems is laborous and isn't always prioritized in an MVP product. GraphQL Rest Router's client allows you to expose a GraphQL query as a REST endpoint with built-in cache management that is compatible with all CDNs and cache management layers (e.g. CloudFlare, Akamai, Varnish, etc).
 
 One line of GraphQL Rest Router code allows you to take
 
@@ -96,7 +95,7 @@ query UserById($id: ID!) {
 }
 ```
 
-and expose it as `http://www.youapiurl.com/user/:id`
+and expose it as `http://www.youapiurl.com/user/:id` with a single line of code:
 
 ```js
 api.mount('UserById').at('/user/:id');
@@ -108,13 +107,11 @@ GraphQL Rest Router is available via NPM as `graphql-rest-router` (`npm install 
 
 ### Getting Started
 
-GRR is still in alpha so the DSL may be subject to changes.
-
 Get started by installing GraphQL Rest Router as a production dependency in your application with: `npm install --save graphql-rest-router`.
 
 To instantiate a bare bones GraphQL Rest Router instance you'll need both the location of your GraphQL Server and the client schema you'll be using. It is advised that you create one `.gql` file per application that holds all of the application's respective queries.
 
-GQL Rest Router leverages [Operation Names](https://graphql.org/learn/queries/#operation-name) and [Variables](https://graphql.org/learn/queries/#variables) as a way to transform your provided schema into a REST endpoint. **Make sure that your queries and mutations are all utilizing operation names or they will not be mountable.**
+GraphQL Rest Router leverages [Operation Names](https://graphql.org/learn/queries/#operation-name) and [Variables](https://graphql.org/learn/queries/#variables) as a way to transform your provided schema into a REST endpoint. **Make sure that your queries and mutations are all utilizing operation names or they will not be mountable.**
 
 For Example:
 
@@ -165,7 +162,7 @@ api.listen(3000);
 
 ### Creating Endpoints
 
-Once GraphQL Rest Router has been configured setting up endpoints to proxy queries through is simple. Make sure that the schema you've provided is utilizing [Operation Names](https://graphql.org/learn/queries/#operation-name) and `mount(OperationName)` to have GQL Rest Router automatically scan your schema for the desired operation and create a RESTful endpoint for it. If you attempt to mount a non-named query or a query that does not exist within your provided schema, GraphQL Rest Router will throw an exception.
+Once GraphQL Rest Router has been configured, setting up endpoints to proxy queries is simple. Make sure that the schema you've provided is utilizing [Operation Names](https://graphql.org/learn/queries/#operation-name) and `mount(OperationName)` to have GraphQL Rest Router automatically scan your schema for the desired operation and create a RESTful endpoint for it. If you attempt to mount a non-named query or a query that does not exist within your provided schema, GraphQL Rest Router will throw an exception.
 
 ```js
 const api = new GraphQLRestRouter(endpoint, schema);
@@ -175,7 +172,7 @@ api.mount('OperationName'); // Mounts "query OperationName" as "GET /OperationNa
 
 #### HTTP Methods
 
-By default, mounted queries are GET requests. If you'd like to change that you may specify any http method using `.as()` on a route.
+By default, mounted queries are GET requests. If you'd like to change that you may specify any HTTP method using `.as()` on a route.
 
 Example:
 
@@ -191,7 +188,7 @@ api.mount('CreateUser').as('post'); // POST /CreateUser
 
 GraphQL Rest Router will read your provided schema to determine which variables are required and optional. If you are unsure how to create a named operation with variables, the [official GraphQL documentation](https://graphql.org/learn/queries/#variables) has examples. When mounted as a GET endpoint, the variables will be expected as query parameters, while all other methods will check the body for the required variables.
 
-In order to reduce unnecessary load on the GraphQL server, GQL Rest Router validates the variables you've provided before sending a request to the GraphQL server.
+In order to reduce unnecessary load on the GraphQL server, GraphQL Rest Router validates the variables you've provided before sending a request to the GraphQL server.
 
 Example Schema:
 
@@ -247,7 +244,7 @@ query SearchUsers($page: Int = 1, $resultsPerPage: Int, $searchTerm: String!) {
 
 #### Custom Paths
 
-If no path is provided to a mounted route, it will be made available exactly as it is type in the operation name:
+If no path is provided to a mounted route, it will be made available exactly as it is typed in the operation name:
 
 ```js
 api.mount('GetUserById'); // Made available at /GetUserById
@@ -256,18 +253,18 @@ api.mount('GetUserById'); // Made available at /GetUserById
 It is possible to change/customize this mounting path by using `.at(pathname)` on a route.
 
 ```js
-api.mount('GetUserById').at('/user'); // A call to '/user?id=42' will execute a 'GetUserById' operation on your GQL Server with an id of 42
+api.mount('GetUserById').at('/user'); // A call to '/user?id=42' will execute a 'GetUserById' operation on your GraphQL Server with an id of 42
 ```
 
 It is also possible to describe a required variable in the path using a syntax similar to that of express routes
 
 ```js
-api.mount('GetUserById').at('/user/:id'); // A call to /user/42 will execute a 'GetUserById'operation on your GQL server with an id of 42
+api.mount('GetUserById').at('/user/:id'); // A call to /user/42 will execute a 'GetUserById'operation on your GraphQL server with an id of 42
 ```
 
 #### Schemaless Mount
 
-A schema is optional with GraphQL Rest Router. You may inline a query on call to mount() instead.
+A schema is optional with GraphQL Rest Router. You may inline a query on call to `mount()` instead.
 
 Example:
 
@@ -283,7 +280,7 @@ api.mount('query GetUserByID($id: ID!) { displayName }').at('/user/:id'); // GET
 
 ### Proxies and Authentication
 
-If the server that you are running GraphQL Rest Router on requires a proxy to connect to the GraphQL server or credentials to connect, you may pass them directly into GQL Rest Router during instantiation or on a per route basis to limit them to specific routes. See [Advanced Configuration of GraphQL Rest Router](#Advanced-Configuration-of-GraphQL-Rest-Router) for implementation
+If the server that you are running GraphQL Rest Router on requires a proxy to connect to the GraphQL server or credentials to connect, you may pass them directly into GraphQL Rest Router during instantiation or on a per route basis to limit them to specific routes. See [Advanced Configuration of GraphQL Rest Router](#Advanced-Configuration-of-GraphQL-Rest-Router) for implementation
 
 ### Advanced Configuration of GraphQL Rest Router
 
@@ -304,13 +301,12 @@ A list of options and their default values is below:
 | defaultCacheTimeInMs | number | 0 | If a cache engine has been provided use this as a default value for all routes and endpoints. If a route level cache time has been provided this value will be ignored |
 | defaultTimeoutInMs | number | 10000 | The amount of time to allow for a request to the GraphQL to wait before timing out an endpoint |
 | cacheKeyIncludedHeaders | string[] | [] | HTTP Headers that are used in the creation of the cache key for requests. This allows users to identify unique requests by specific headers. If these headers specified here differ between requests, they will be considered unique requests. |
-| autoDiscoverEndpoints | boolean | false | When set to true, GQL Rest Router will scan the provided client schema you provide and automatically mount an endpoint for each operation name / named query |
-| optimizeQueryRequest | boolean | false | (BETA) When set to true, GQL Rest Router will split up the provided schema into the smallest fragment necessary to complete each request to the GraphQL server as opposed to sending the originally provided schema with each request|
+| optimizeQueryRequest | boolean | false | When set to true, GraphQL Rest Router will split up the provided schema into the smallest fragment necessary to complete each request to the GraphQL server as opposed to sending the originally provided schema with each request|
 | headers | object | {} | Any headers provided here will be sent with each request to GraphQL. If headers are also set at the route level, they will be combined with these headers (Route Headers take priority over Global Headers) |
 | passThroughHeaders | string[] | [] | An array of strings that indicate which headers to pass through from the request to GraphQL Rest Router to the GraphQL Server. (Example: ['x-context-jwt']) |
-| auth | [AxiosBasicCredentials](https://github.com/axios/axios/blob/76f09afc03fbcf392d31ce88448246bcd4f91f8c/index.d.ts#L9-L12) | null | If the GraphQL server is protected with basic auth provide the basic auth credentials here to allow GQL Rest Router to connect. (Example: { username: 'pesto', password: 'foobar' } |
-| proxy | [AxiosProxyConfig](https://github.com/axios/axios/blob/76f09afc03fbcf392d31ce88448246bcd4f91f8c/index.d.ts#L14-L22) | null | If a proxy is required to communicate with your GraphQL server from the server that GQL Rest Router is running on, provide it here. |
-| cacheEngine | [ICacheEngine](https://github.com/Econify/graphql-rest-router/blob/29cc328f23b8dd579a6f4af242266460e95e7d69/src/types.ts#L87-L90) | null | Either a cache engine that [ships default](#Caching) with GQL Rest Router or adheres to the [ICacheEngine interface](#Custom-Cache-Engine) |
+| auth | [AxiosBasicCredentials](https://github.com/axios/axios/blob/76f09afc03fbcf392d31ce88448246bcd4f91f8c/index.d.ts#L9-L12) | null | If the GraphQL server is protected with basic auth provide the basic auth credentials here to allow GraphQL Rest Router to connect. (Example: { username: 'pesto', password: 'foobar' } |
+| proxy | [AxiosProxyConfig](https://github.com/axios/axios/blob/76f09afc03fbcf392d31ce88448246bcd4f91f8c/index.d.ts#L14-L22) | null | If a proxy is required to communicate with your GraphQL server from the server that GraphQL Rest Router is running on, provide it here. |
+| cacheEngine | [ICacheEngine](https://github.com/Econify/graphql-rest-router/blob/29cc328f23b8dd579a6f4af242266460e95e7d69/src/types.ts#L87-L90) | null | Either a cache engine that [ships default](#Caching) with GraphQL Rest Router or adheres to the [ICacheEngine interface](#Custom-Cache-Engine) |
 | logger | [ILogger](https://github.com/Econify/graphql-rest-router/blob/29cc328f23b8dd579a6f4af242266460e95e7d69/src/types.ts#L101-L107) | null | A logger object that implements info, warn, error, and debug methods |
 | defaultLogLevel | number | 0 | Default logger level for the logger object |
 
@@ -335,14 +331,14 @@ api.mount('GetUser').withOptions({
 
 GraphQL Rest Router allows the developer to add transformations on incoming requests or outgoing responses. By default, the regular axios transformers are used.
 
-Say the shape of data coming from GraphQL is not what your consuming application needs. Instead of putting transformational logic into your consuming components, you can encapsulate it into the REST layer.
+If the shape of data coming from GraphQL is not what your consuming application needs, transformation logic can be encapsulated inside of the REST layer in the form of these callbacks.
 
 ```js
 import GraphQLRestRouter from 'graphql-rest-router';
 
 const api = new GraphQLRestRouter('http://localhost:1227', schema);
 
-api.mount('GetImages').withOption('transformResponse', (response => {
+api.mount('GetImages').withOption('transformResponse', (response) => {
   const { data, errors } = response;
 
   return {
@@ -351,13 +347,13 @@ api.mount('GetImages').withOption('transformResponse', (response => {
       images: data.images?.reduce((acc, img) => {
         acc[img.url] = img;
       }, {}),
-      errors,
     }
+    errors,
   };
 }));
 ```
 
-You can also modify the outgoing request. These transforms should return a string request, but also allow you to modify the request headers.
+You can also modify the outgoing request. These transformers should return the stringified request, but also allow you to modify the request headers.
 
 ```js
 import GraphQLRestRouter from 'graphql-rest-router';
@@ -372,14 +368,15 @@ api.mount('GetImages').at('/images').withOption('transformRequest', (request, he
 
 ### Logging
 
-GraphQL Rest Router is capable of logging incoming requests and errors. When creating your router, you may use a logger of your own choice. GraphQL Rest Router allows you to configure log levels. The logger parameter must implement [ILogger](https://github.com/Econify/graphql-rest-router/blob/29cc328f23b8dd579a6f4af242266460e95e7d69/src/types.ts#L101-L107), and is compatible with most standard logging libraries.
+GraphQL Rest Router supports robust logging of incoming requests and errors. On instantiation, a logger of your choice can be injected with configurable log levels. The logger object must implement [ILogger](https://github.com/Econify/graphql-rest-router/blob/29cc328f23b8dd579a6f4af242266460e95e7d69/src/types.ts#L101-L107), and log levels must be one of the following [ILogLevels](https://github.com/Econify/graphql-rest-router/blob/f83881d30bdb329a306ebb94fdf577fb065f2e6e/src/types.ts#L107-L113).
+
 
 ```js
 import GraphQLRestRouter, { LogLevels } from 'graphql-rest-router';
 
 const api = new GraphQLRestRouter('http://localhost:1227', schema, {
   logger: console,
-  defaultLogLevel: 0 // Log only errors
+  defaultLogLevel: LogLevels.ERROR // Log only errors
 });
 
 api.mount('CreateUser').withOption('logLevel', LogLevels.DEBUG); // Log everything
@@ -388,19 +385,18 @@ api.mount('GetUser').withOption('logLevel', LogLevels.SILENCE); // No logs
 
 ### Caching
 
-GraphQL Rest Router ships with two cache interfaces stock and supports any number of custom or third party caching interfaces as long as they adhere to [ICacheEngine](https://github.com/Econify/graphql-rest-router/blob/29cc328f23b8dd579a6f4af242266460e95e7d69/src/types.ts#L87-L90)
+GraphQL Rest Router includes two cache interfaces and supports any number of custom or third party caching interfaces, as long as they implement [ICacheEngine](https://github.com/Econify/graphql-rest-router/blob/29cc328f23b8dd579a6f4af242266460e95e7d69/src/types.ts#L87-L90)
 
-*Important note about request headers*: by default GraphQL Rest Router does not differentiate cached requests on their HTTP headers. If your service gives different responses based on headers, you need to include them in the `cacheKeyIncludedHeaders` global configuration option.
+*Important note about cache key creation*: by default, GraphQL Rest Router does not differentiate cache keys based on their HTTP headers. If an upstream GraphQL service returns different responses based on headers, the GraphQL rest router instance would be required to include them in the `cacheKeyIncludedHeaders` global configuration option.
 
-E.g. if your application supports `Authorization` headers, you must include that header in the `cacheKeyIncludedHeaders` field so that the cache layer will not serve User A's result to User B. Alternatively, you can disable the cache on authorized routes.
+For example, if your application supports `Authorization` headers, you must include that header in the `cacheKeyIncludedHeaders` field. The cache layer will then not serve User A's result to User B. Alternatively, you can disable the cache on authorized routes.
 
 #### In Memory Cache
 
-InMemoryCache stores your cached route data on your server in memory. This can be used in development or with low TTLs in order to prevent a [thundering herd](https://en.wikipedia.org/wiki/Thundering_herd_problem) however it is strongly discouraged to use this in production. In Memory caches have the ability to deplete your system's resources and take down your instance of GraphQLRestRouter.
+InMemoryCache stores your cached response data on your server in memory. This can be used in development or with very low throughput, however it is strongly discouraged to use this in production.
 
 ```js
 import GraphQLRestRouter, { InMemoryCache } from 'graphql-rest-router';
-import CustomCache from ...;
 
 const api = new GraphQLRestRouter('http://localhost:1227', schema, {
   cacheEngine: new InMemoryCache(),
@@ -408,14 +404,13 @@ const api = new GraphQLRestRouter('http://localhost:1227', schema, {
 });
  
 api.mount('CreateUser').withOption('cacheTimeInMs', 0); // Disable the cache on this route
-api.mount('GetUser').withOption('cacheEngine', new CustomCache()); // Use a different cache engine
 ```
 
-Note: By default the InMemoryCache expires the cache on a 10 millisecond interval. This is configurable via the constructor. E.g. `new InMemoryCache(5000)` will poll every 5 seconds instead of every 10 milliseconds.
+Note: By default the InMemoryCache TTL is 10 milliseconds. This is configurable via the constructor. E.g. `new InMemoryCache(5000)` will expire entries every 5 seconds instead of every 10 milliseconds.
 
 #### Redis Cache
 
-RedisCache stores your cached route data in an external Redis instance. This gives you the benefits of the above InMemoryCache with less risk of depleting the Rest Router system's resources. The RedisCache class accepts the [ClientOpts](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/f4b63e02370940350887eaa82ac976dc2ecbf313/types/redis/index.d.ts#L39) object type provided for connection onfiguration.
+RedisCache stores your cached route data in an external Redis instance. The RedisCache class constructor accepts the [ClientOpts](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/f4b63e02370940350887eaa82ac976dc2ecbf313/types/redis/index.d.ts#L39) object type provided for connection configuration.
 
 ```js
 import GraphQLRestRouter, { RedisCache } from 'graphql-rest-router';
@@ -431,9 +426,21 @@ api.mount('GetUser').withOption('cacheTimeInMs', 500); // Override 5 minute cach
 
 #### Custom Cache Engine
 
-If you have a unique cache situation, or use a cache that does not ship by default with GQL Rest Router, you may implement a custom cache as long as it adheres to the [ICacheEngine](https://github.com/Econify/graphql-rest-router/blob/af05660d53ee74df10ccc85c9fdc958eec09ff71/src/types.ts#L94-L97) interface.
+You may implement a custom cache engine as long as it adheres to the [ICacheEngine](https://github.com/Econify/graphql-rest-router/blob/af05660d53ee74df10ccc85c9fdc958eec09ff71/src/types.ts#L94-L97) interface.
 
 Simply said, provide an object that contains `get` and `set` functions. See `InMemoryCache.ts` or `RedisCache.ts` as examples.
+
+```js
+import GraphQLRestRouter from 'graphql-rest-router';
+import CustomCache from ...;
+
+const api = new GraphQLRestRouter('http://localhost:1227', schema, {
+  cacheEngine: new CustomCache(),
+  defaultCacheTimeInMs: 300,
+});
+ 
+api.mount('CreateUser');
+```
 
 ### Swagger / Open API
 
@@ -481,11 +488,11 @@ Not supported yet, please create a PR!
 
 ### Usage with Web Frameworks
 
-Currently GQL Rest Router only supports Express out of the box. Please submit a PR or an Issue if you would like to see GQL Rest Router support additional frameworks.
+Currently GraphQL Rest Router only supports Express out of the box. Please submit a PR or an Issue if you would like to see GraphQL Rest Router support additional frameworks.
 
 #### Usage with Express
 
-It is common to leverage GraphQL Rest Client on a server that is already delivering a website as opposed to standing up a net new server. To integrate with an existing express server, simply export GraphQL Rest Router as express using `.asExpressRouter()` instead of starting up a new server using `.listen(port)`.
+It is common to leverage GraphQL Rest Router client on a server that is already delivering a website as opposed to standing up a new server. To integrate with an existing express server, simply export GraphQL Rest Router as express using `.asExpressRouter()` instead of starting up a new server using `.listen(port)`.
 
 For Example:
 
@@ -505,15 +512,34 @@ const app = express();
 
 app.get('/status', (req, res) => ...);
 app.get('/', (req, res) => ...);
-app.use('/api', api); // MOUNTS GQL REST ROUTER ON :3000/api/* (e.g. :3000/api/users/4)
+app.use('/api', api); // Mounts GraphQL Rest Router ON :3000/api/* (e.g. :3000/api/users/4)
 
 app.listen(3000);
 ```
 
 #### Usage with KOA
 
-As of the time of this writing, a KOA extension for GQL Rest Router is not available. Feel free to submit a PR.
+As of the time of this writing, a KOA extension for GraphQL Rest Router is not available. Feel free to submit a PR.
 
 ### Code Examples
 
 See the [example client](/example-consuming-client) in this repo for code examples.
+
+## Upgrading from alpha
+There is one breaking change with the release of `1.0.0-beta.0`: Transform response callbacks now receive parsed data as opposed to the stringified version. Therefore, any callback passed in this way must no longer parse prior to processing.
+
+Chained route methods such as `disableCache()` or `transformResponse()` have been deprecated. Please use `withOption()` or `withOptions()` instead. Support for chained route methods will be removed in a future version.
+
+For example:
+
+```js
+// not this
+api.mount('GetUserById').at('/users/:id').disableCache().transformResponse(cb);
+
+// this
+api.mount('GetUserById').at('/users/:id').withOptions({
+  cacheTimeInMs: 0,
+  transformResponse: cb,
+});
+```
+

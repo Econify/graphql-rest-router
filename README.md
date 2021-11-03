@@ -36,6 +36,7 @@ api.listen(3000, () => {
   - [Express.js Usage](#usage-with-express)
   - [KOA Usage](#usage-with-koa)
   - [Examples](#code-examples)
+- [Upgrading From Alpha](#upgrading-from-alpha)
 
 ## Overview
 
@@ -370,7 +371,6 @@ api.mount('GetImages').at('/images').withOption('transformRequest', (request, he
 
 GraphQL Rest Router supports robust logging of incoming requests and errors. On instantiation, a logger of your choice can be injected with configurable log levels. The logger object must implement [ILogger](https://github.com/Econify/graphql-rest-router/blob/29cc328f23b8dd579a6f4af242266460e95e7d69/src/types.ts#L101-L107), and log levels must be one of the following [ILogLevels](https://github.com/Econify/graphql-rest-router/blob/f83881d30bdb329a306ebb94fdf577fb065f2e6e/src/types.ts#L107-L113).
 
-
 ```js
 import GraphQLRestRouter, { LogLevels } from 'graphql-rest-router';
 
@@ -525,7 +525,8 @@ As of the time of this writing, a KOA extension for GraphQL Rest Router is not a
 
 See the [example client](/example-consuming-client) in this repo for code examples.
 
-## Upgrading from alpha
+## Upgrading from Alpha
+
 There is one breaking change with the release of `1.0.0-beta.0`: Transform response callbacks now receive parsed data as opposed to the stringified version. Therefore, any callback passed in this way must no longer parse prior to processing.
 
 Chained route methods such as `disableCache()` or `transformResponse()` have been deprecated. Please use `withOption()` or `withOptions()` instead. Support for chained route methods will be removed in a future version.
@@ -542,4 +543,3 @@ api.mount('GetUserById').at('/users/:id').withOptions({
   transformResponse: cb,
 });
 ```
-

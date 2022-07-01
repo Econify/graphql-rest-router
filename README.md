@@ -543,3 +543,7 @@ api.mount('GetUserById').at('/users/:id').withOptions({
   transformResponse: cb,
 });
 ```
+
+## Like this package?
+
+Check out Econify's other GraphQL package, [graphql-request-profiler](https://www.github.com/Econify/graphql-request-profiler), an easy to use performance analysis and visualization tool for tracing API resolver execution time.
